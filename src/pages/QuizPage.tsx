@@ -78,7 +78,6 @@ const questions: Question[] = [
 function QuizPage({ onNavigate }: QuizPageProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [score, setScore] = useState(0)
   const [showFeedback, setShowFeedback] = useState(false)
 
   const question = questions[currentQuestion]
@@ -88,9 +87,6 @@ function QuizPage({ onNavigate }: QuizPageProps) {
     if (showFeedback) return
     setSelectedAnswer(index)
     setShowFeedback(true)
-    if (index === question.answer) {
-      setScore((prev) => prev + 1)
-    }
   }
 
   const handleNext = () => {
@@ -225,5 +221,4 @@ function QuizPage({ onNavigate }: QuizPageProps) {
   )
 }
 
-export { questions }
 export default QuizPage
