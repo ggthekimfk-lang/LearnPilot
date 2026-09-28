@@ -8,9 +8,11 @@ import AITutor from './pages/AITutor'
 import Quiz from './pages/Quiz'
 import Progress from './pages/Progress'
 import Settings from './pages/Settings'
+import StudyMaterial from './pages/StudyMaterial'
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
+  const [studyText, setStudyText] = useState('')
 
   const renderPage = () => {
     switch (currentPage) {
@@ -24,7 +26,7 @@ function App() {
         return <AITutor />
 
       case 'quiz':
-        return <Quiz />
+        return <Quiz studyText={studyText} />
 
       case 'progress':
         return <Progress />
@@ -32,11 +34,20 @@ function App() {
       case 'settings':
         return <Settings />
 
+      case 'study':
+        return (
+          <StudyMaterial
+            onSubmit={(text) => {
+              setStudyText(text)
+              setCurrentPage('quiz')
+            }}
+          />
+        )
+
       default:
         return <Dashboard />
     }
   }
-
   return (
     <div className="min-h-screen bg-slate-100 flex">
       <Sidebar

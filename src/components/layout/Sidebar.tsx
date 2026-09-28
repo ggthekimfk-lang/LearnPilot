@@ -5,7 +5,7 @@ type Page =
     | 'quiz'
     | 'progress'
     | 'settings'
-
+    | 'study'
 interface SidebarProps {
     currentPage: Page
     onPageChange: (page: Page) => void
@@ -18,6 +18,7 @@ const menuItems: { label: string; icon: string; page: Page }[] = [
     { label: 'Quiz', icon: '📝', page: 'quiz' },
     { label: 'Progress', icon: '📊', page: 'progress' },
     { label: 'Settings', icon: '⚙️', page: 'settings' },
+    { label: 'Add Material', icon: '📄', page: 'study' },
 ]
 
 function Sidebar({ currentPage, onPageChange }: SidebarProps) {
@@ -39,8 +40,8 @@ function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                         key={item.page}
                         onClick={() => onPageChange(item.page)}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition ${currentPage === item.page
-                                ? 'bg-blue-50 text-blue-600'
-                                : 'text-slate-600 hover:bg-slate-100'
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'text-slate-600 hover:bg-slate-100'
                             }`}
                     >
                         <span>{item.icon}</span>

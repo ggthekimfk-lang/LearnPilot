@@ -1,45 +1,77 @@
 import { useRef, useState } from 'react'
 
-function StudyMaterial() {
+interface StudyMaterialProps {
+    onSubmit: (text: string) => void
+}
+
+function StudyMaterial({ onSubmit }: StudyMaterialProps) {
     const [text, setText] = useState('')
     const [fileName, setFileName] = useState('')
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [submitted, setSubmitted] = useState(false)
     const [error, setError] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
         const file = event.target.files?.[0]
 
         if (!file) return
 
         setError('')
+        setSubmitted(false)
 
         if (file.type !== 'application/pdf') {
             setError('กรุณาเลือกไฟล์ PDF เท่านั้น')
             return
         }
 
+        setSelectedFile(file)
         setFileName(file.name)
-    }
 
+        // ถ้าเลือก PDF ให้ล้าง Text
+        setText('')
+    }
     const handleContinue = () => {
-        if (!text.trim() && !fileName) {
+        if (!text.trim() && !selectedFile) {
             setError('กรุณาใส่ข้อความหรือเลือกไฟล์ PDF ก่อน')
             return
         }
 
         setError('')
 
-        console.log({
-            text,
-            fileName,
-        })
+        const studyMaterial = {
+            type: selectedFile ? 'pdf' : 'text',
+            text: text.trim(),
+            fileName: selectedFile?.name ?? '',
+            fileSize: selectedFile?.size ?? 0,
+        }
 
-        alert('รับข้อมูลเรียบร้อยแล้ว! ขั้นต่อไปเราจะนำข้อมูลไปสร้างบทเรียน')
+        console.log('Study Material:', studyMaterial)
+
+        // ส่งข้อความไป App.tsx
+        if (text.trim()) {
+            onSubmit(text.trim())
+            return
+        }
+
+        setSubmitted(true)
+    }
+    const handleRemoveFile = () => {
+        setSelectedFile(null)
+        setFileName('')
+        setSubmitted(false)
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+        }
     }
 
     return (
         <div className="min-h-screen bg-slate-100 p-6 md:p-8">
             <div className="mx-auto max-w-5xl">
+
                 {/* Header */}
                 <div className="mb-8">
                     <p className="mb-2 text-sm font-medium text-blue-600">
@@ -51,13 +83,15 @@ function StudyMaterial() {
                     </h1>
 
                     <p className="mt-2 text-slate-500">
-                        เพิ่มเนื้อหาที่ต้องการเรียน แล้วให้ LearnPilot ช่วยสร้างบทเรียน
+                        เพิ่มเนื้อหาที่ต้องการเรียน แล้วให้ LearnPilot
+                        ช่วยสร้างบทเรียน
                     </p>
                 </div>
 
-                {/* Main card */}
+                {/* Main Card */}
                 <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
-                    {/* Text input */}
+
+                    {/* Text */}
                     <div>
                         <label
                             htmlFor="study-material"
@@ -69,12 +103,14 @@ function StudyMaterial() {
                         <textarea
                             id="study-material"
                             value={text}
+                            disabled={!!selectedFile}
                             onChange={(event) => {
                                 setText(event.target.value)
                                 setError('')
+                                setSubmitted(false)
                             }}
                             placeholder="วางข้อความจากหนังสือ เอกสาร หรือเนื้อหาที่ต้องการเรียนที่นี่..."
-                            className="min-h-[280px] w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                            className="min-h-[280px] w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                         />
 
                         <div className="mt-2 flex justify-end text-sm text-slate-400">
@@ -93,7 +129,7 @@ function StudyMaterial() {
                         <div className="h-px flex-1 bg-slate-200" />
                     </div>
 
-                    {/* PDF upload */}
+                    {/* PDF */}
                     <div>
                         <p className="mb-3 text-lg font-semibold text-slate-900">
                             📄 Upload PDF
@@ -112,7 +148,9 @@ function StudyMaterial() {
                             onClick={() => fileInputRef.current?.click()}
                             className="w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center transition hover:border-blue-400 hover:bg-blue-50"
                         >
-                            <div className="text-4xl">📄</div>
+                            <div className="text-4xl">
+                                📄
+                            </div>
 
                             <div className="mt-3 font-semibold text-slate-700">
                                 Click to upload PDF
@@ -123,10 +161,14 @@ function StudyMaterial() {
                             </div>
                         </button>
 
+                        {/* Selected PDF */}
                         {fileName && (
                             <div className="mt-4 flex items-center justify-between rounded-xl bg-blue-50 p-4">
+
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">📄</span>
+                                    <span className="text-2xl">
+                                        📄
+                                    </span>
 
                                     <div>
                                         <p className="font-medium text-slate-800">
@@ -141,12 +183,7 @@ function StudyMaterial() {
 
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setFileName('')
-                                        if (fileInputRef.current) {
-                                            fileInputRef.current.value = ''
-                                        }
-                                    }}
+                                    onClick={handleRemoveFile}
                                     className="text-sm font-medium text-red-500 hover:text-red-600"
                                 >
                                     Remove
@@ -159,6 +196,15 @@ function StudyMaterial() {
                     {error && (
                         <div className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-600">
                             ⚠️ {error}
+                        </div>
+                    )}
+
+                    {/* Success */}
+                    {submitted && (
+                        <div className="mt-6 rounded-xl bg-green-50 p-4 text-sm text-green-700">
+                            ✅ รับ Study Material เรียบร้อยแล้ว
+                            <br />
+                            ขั้นต่อไปเราจะนำข้อมูลนี้ไปสร้างบทเรียน
                         </div>
                     )}
 
@@ -185,6 +231,7 @@ function StudyMaterial() {
                         Summary, AI Tutor และ Quiz
                     </p>
                 </div>
+
             </div>
         </div>
     )
