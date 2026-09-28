@@ -228,7 +228,7 @@ function StudyMaterial({ onSubmit }: StudyMaterialProps) {
 
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                         LearnPilot จะนำเนื้อหาที่คุณส่งเข้ามาไปเตรียมสำหรับ
-                        Summary, AI Tutor และ Quiz
+                        Summary และ Quiz
                     </p>
                 </div>
 

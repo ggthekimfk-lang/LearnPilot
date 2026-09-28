@@ -1,7 +1,6 @@
 type Page =
     | 'dashboard'
     | 'courses'
-    | 'tutor'
     | 'quiz'
     | 'progress'
     | 'settings'
@@ -14,7 +13,6 @@ interface SidebarProps {
 const menuItems: { label: string; icon: string; page: Page }[] = [
     { label: 'Dashboard', icon: '🏠', page: 'dashboard' },
     { label: 'My Courses', icon: '📚', page: 'courses' },
-    { label: 'AI Tutor', icon: '🤖', page: 'tutor' },
     { label: 'Quiz', icon: '📝', page: 'quiz' },
     { label: 'Progress', icon: '📊', page: 'progress' },
     { label: 'Settings', icon: '⚙️', page: 'settings' },

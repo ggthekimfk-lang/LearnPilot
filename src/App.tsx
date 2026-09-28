@@ -4,7 +4,6 @@ import Sidebar, { type Page } from './components/layout/Sidebar'
 
 import Dashboard from './pages/Dashboard'
 import Courses from './pages/Courses'
-import AITutor from './pages/AITutor'
 import Quiz from './pages/Quiz'
 import Progress from './pages/Progress'
 import Settings from './pages/Settings'
@@ -21,9 +20,6 @@ function App() {
 
       case 'courses':
         return <Courses />
-
-      case 'tutor':
-        return <AITutor />
 
       case 'quiz':
         return <Quiz studyText={studyText} />
