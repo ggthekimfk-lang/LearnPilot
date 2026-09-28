@@ -53,5 +53,4 @@ function Sidebar({ currentPage, onPageChange }: SidebarProps) {
 }
 
 export type { Page }
-
 export default Sidebar

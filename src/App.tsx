@@ -1,5 +1,7 @@
 import { useState } from 'react'
+
 import Sidebar, { type Page } from './components/layout/Sidebar'
+
 import Dashboard from './pages/Dashboard'
 import Courses from './pages/Courses'
 import AITutor from './pages/AITutor'
