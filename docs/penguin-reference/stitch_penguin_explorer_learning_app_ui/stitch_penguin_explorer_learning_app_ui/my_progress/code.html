@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-fixed-variant": "#005321", "on-primary-container": "#3d687c", "tertiary": "#575e72", "surface-container": "#eeeeee", "secondary": "#006e2f", "primary-container": "#bae6fd", "surface-bright": "#f9f9f9", "surface": "#f9f9f9", "on-tertiary-fixed-variant": "#3f4759", "on-secondary-container": "#007432", "secondary-container": "#6bff8f", "on-tertiary": "#ffffff", "surface-container-low": "#f3f3f4", "on-surface": "#1a1c1c", "outline-variant": "#c1c7cc", "on-error-container": "#93000a", "primary-fixed-dim": "#a1cde3", "surface-dim": "#dadada", "inverse-on-surface": "#f0f1f1", "on-primary-fixed-variant": "#1e4c5f", "surface-variant": "#e2e2e2", "error-container": "#ffdad6", "error": "#ba1a1a", "on-background": "#1a1c1c", "surface-container-lowest": "#ffffff", "primary": "#396477", "on-tertiary-container": "#5b6276", "surface-tint": "#396477", "tertiary-fixed": "#dbe2fa", "tertiary-container": "#d8dff7", "on-secondary": "#ffffff", "inverse-surface": "#2f3131", "on-tertiary-fixed": "#141b2c", "primary-fixed": "#bee9ff", "on-error": "#ffffff", "on-secondary-fixed": "#002109", "secondary-fixed-dim": "#4ae176", "on-surface-variant": "#41484c", "outline": "#71787c", "secondary-fixed": "#6bff8f", "background": "#f9f9f9", "on-primary-fixed": "#001f2a", "on-primary": "#ffffff", "tertiary-fixed-dim": "#bfc6dd", "inverse-primary": "#a1cde3", "surface-container-high": "#e8e8e8", "surface-container-highest": "#e2e2e2" }, borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, spacing: { "gutter": "1rem", "space-sm": "0.75rem", "gutter-mobile": "0.75rem", "margin": "1.5rem", "space-xl": "2.25rem", "space-md": "1rem", "margin-mobile": "1rem", "space-xs": "0.375rem", "space-lg": "1.5rem" }, fontFamily: { "visual-heading": ["Plus Jakarta Sans"], "visual-dense": ["Plus Jakarta Sans"], "visual-subheading": ["Plus Jakarta Sans"], "visual-hero": ["Plus Jakarta Sans"], "visual-display": ["Plus Jakarta Sans"], "visual-hero-mobile": ["Plus Jakarta Sans"], "visual-lead": ["Plus Jakarta Sans"], "visual-micro": ["Plus Jakarta Sans"], "visual-standard": ["Plus Jakarta Sans"] }, fontSize: { "visual-heading": ["24px", { "lineHeight": "24px", "fontWeight": "600" }], "visual-dense": ["12px", { "lineHeight": "12px", "fontWeight": "400" }], "visual-subheading": ["20px", { "lineHeight": "20px", "fontWeight": "500" }], "visual-hero": ["48px", { "lineHeight": "48px", "fontWeight": "700" }], "visual-display": ["32px", { "lineHeight": "32px", "fontWeight": "600" }], "visual-hero-mobile": ["36px", { "lineHeight": "36px", "fontWeight": "700" }], "visual-lead": ["16px", { "lineHeight": "16px", "fontWeight": "500" }], "visual-micro": ["10px", { "lineHeight": "10px", "fontWeight": "400" }], "visual-standard": ["14px", { "lineHeight": "14px", "fontWeight": "400" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100%;background-color:#f9f9f9;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.03)]"><div class="h-16 px-margin-mobile flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="Penguin Explorer Mascot Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWtUi6y6ul_blbVmrOSmoM52_4zOhvYx0pE8IX-hSRMUDWWjVVDL3ZDco4ywdHnKxkA6kSbBNh9EnhUVG_yF499VAHT8HS6tKUB7F72guce9b7ezmj3nTi2Amp84yNdTaoPK5Ck3mJasLSeOVfvXqT256xMQ8_agO2TeM7wEURTUvFU9uPdjzil_DHRaNAWHZK6crd9A2mslvlS9tnoYTtyOpWsBbJoaj1UbxiyOmvn_QOFcO0os8B"/><span class="hidden">Progress Analytics</span><div class="w-9 h-9 rounded-full bg-primary-container/60 flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[20px]">cruelty_free</span></div></div><div class="flex items-center gap-space-xs"><div class="w-10 h-10 rounded-full bg-surface-container-lowest shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex items-center justify-center"><span class="material-symbols-outlined text-secondary text-[20px]">eco</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col w-full bg-surface pt-16 pb-24 px-margin-mobile"><div class="flex flex-col w-full gap-space-lg select-none">
+<!-- Top Visual Mascot & Status Cluster -->
+<div class="flex items-center justify-between px-space-xs pt-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-14 h-14 rounded-full bg-primary-container flex items-center justify-center shadow-sm overflow-hidden p-1">
+<img class="w-full h-full object-contain rounded-full" data-alt="Cute friendly baby penguin explorer wearing brass pilot goggles smiling cheerfully against a soft sky blue circular badge, vibrant clean 3D vector illustration style, smooth clean lighting, soft cyan and white highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHGiAapQz0B0eG-XT5C_evpXogOeBPJMQapvR0aVUDswBFybJynTO1bs5guEml_Dy_2T835EOvYrPUj7CScDB3jiNdgSfUjATfUZAZ9rDTqAmXN0IFvXkWmLcZiIlQoLz2Q-gZqJGPktO1Ec5l8TPw6vCSRXgGNI861-llV3wQMPzhD0xLuFEgUtZV1CJPZxYJ0exF-NY0c_-mnpWb2sC3ujOQmfAD_HIziDl2hnqYDp8a5UhmztyP"/>
+<div class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-secondary-fixed border-2 border-surface-container-lowest shadow-sm"></div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="w-24 h-4 rounded-full bg-surface-container-highest"></div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">stars</span>
+<div class="w-8 h-2 rounded-full bg-surface-container-high"></div>
+</div>
+</div>
+</div>
+<!-- Visual Streak Badge (Wordless) -->
+<div class="h-10 px-space-sm rounded-full bg-surface-container-lowest shadow-[0_4px_16px_rgba(0,0,0,0.04)] flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-amber-500 text-[18px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<div class="flex gap-1 items-center">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-surface-container-highest"></div>
+</div>
+</div>
+</div>
+<!-- Hero Card: Multi-Layer Circular Donut & Grand Trophy -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-lg shadow-[0_12px_32px_-6px_rgba(186,230,253,0.35),0_4px_12px_-2px_rgba(148,163,184,0.08)] flex flex-col items-center relative overflow-hidden">
+<!-- Ambient gentle glow backdrop -->
+<div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-primary-container/40 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-secondary-fixed/30 blur-2xl pointer-events-none"></div>
+<!-- Header Glyph Indicator -->
+<div class="w-full flex items-center justify-between mb-space-sm">
+<div class="w-9 h-9 rounded-2xl bg-surface-container-low flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-3 h-3 rounded-full bg-secondary-fixed-dim"></div>
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary-fixed"></div>
+<div class="w-3 h-3 rounded-full bg-amber-200"></div>
+</div>
+</div>
+<!-- SVG Multi-Layer Donut Chart with Golden Cup -->
+<div class="relative w-52 h-52 my-space-xs flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 200 200">
+<!-- Background track -->
+<circle cx="100" cy="100" fill="none" r="82" stroke="#F1F5F9" stroke-linecap="round" stroke-width="14"></circle>
+<!-- Segment 1: Secondary Green (#22C55E) ~38% -->
+<circle cx="100" cy="100" fill="none" r="82" stroke="#22C55E" stroke-dasharray="195 515" stroke-dashoffset="0" stroke-linecap="round" stroke-width="14"></circle>
+<!-- Segment 2: Sky Blue (#38BDF8) ~28% -->
+<circle cx="100" cy="100" fill="none" r="82" stroke="#38BDF8" stroke-dasharray="144 515" stroke-dashoffset="-205" stroke-linecap="round" stroke-width="14"></circle>
+<!-- Segment 3: Soft Violet (#A78BFA) ~18% -->
+<circle cx="100" cy="100" fill="none" r="82" stroke="#A78BFA" stroke-dasharray="92 515" stroke-dashoffset="-358" stroke-linecap="round" stroke-width="14"></circle>
+<!-- Segment 4: Amber (#FBBF24) ~12% -->
+<circle cx="100" cy="100" fill="none" r="82" stroke="#FBBF24" stroke-dasharray="61 515" stroke-dashoffset="-458" stroke-linecap="round" stroke-width="14"></circle>
+<!-- Inner Ambient Ring -->
+<circle cx="100" cy="100" fill="#F8FAFC" r="66"></circle>
+</svg>
+<!-- Center Floating Golden Trophy Artifact -->
+<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+<div class="relative flex items-center justify-center">
+<div class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center shadow-[0_8px_20px_rgba(251,191,36,0.3)]">
+<span class="material-symbols-outlined text-amber-500 text-[36px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<!-- Tiny floating star sparkles -->
+<span class="material-symbols-outlined absolute -top-1 -right-2 text-amber-400 text-[18px] animate-pulse" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+<span class="material-symbols-outlined absolute -bottom-1 -left-2 text-amber-400 text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<!-- Proportional skeleton milestone pill -->
+<div class="mt-2 w-10 h-2.5 rounded-full bg-surface-container-high"></div>
+</div>
+</div>
+<!-- Bottom Indicator Pills inside Card -->
+<div class="w-full flex items-center justify-around pt-space-xs mt-space-xs">
+<div class="flex items-center gap-1.5">
+<div class="w-3 h-3 rounded-full bg-[#22C55E]"></div>
+<div class="w-8 h-2 rounded-full bg-surface-container-high"></div>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-3 h-3 rounded-full bg-[#38BDF8]"></div>
+<div class="w-8 h-2 rounded-full bg-surface-container-high"></div>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-3 h-3 rounded-full bg-[#A78BFA]"></div>
+<div class="w-8 h-2 rounded-full bg-surface-container-high"></div>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-3 h-3 rounded-full bg-[#FBBF24]"></div>
+<div class="w-8 h-2 rounded-full bg-surface-container-high"></div>
+</div>
+</div>
+</div>
+<!-- Weekly Activity Streak Bar Chart Card -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-md shadow-[0_8px_24px_-4px_rgba(186,230,253,0.3)] flex flex-col gap-space-md">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[20px]">calendar_view_week</span>
+</div>
+<div class="w-20 h-3 rounded-full bg-surface-container-high"></div>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<div class="w-10 h-3 rounded-full bg-secondary-container/60"></div>
+</div>
+</div>
+<!-- 7 Rounded Vertical Pills for Days of Week -->
+<div class="h-32 flex items-end justify-between px-space-xs pt-space-xs pb-1">
+<!-- Day 1 -->
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full max-w-[28px] h-16 rounded-full bg-surface-container flex items-end p-1 transition-all">
+<div class="w-full h-10 rounded-full bg-primary-fixed-dim"></div>
+</div>
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-high"></div>
+</div>
+<!-- Day 2 -->
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full max-w-[28px] h-24 rounded-full bg-surface-container flex items-end p-1 transition-all">
+<div class="w-full h-16 rounded-full bg-primary-fixed-dim"></div>
+</div>
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-high"></div>
+</div>
+<!-- Day 3 -->
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full max-w-[28px] h-20 rounded-full bg-surface-container flex items-end p-1 transition-all">
+<div class="w-full h-12 rounded-full bg-primary-fixed-dim"></div>
+</div>
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-high"></div>
+</div>
+<!-- Day 4 -->
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full max-w-[28px] h-28 rounded-full bg-surface-container flex items-end p-1 transition-all">
+<div class="w-full h-20 rounded-full bg-primary-fixed-dim"></div>
+</div>
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-high"></div>
+</div>
+<!-- Day 5 (Current Active Day - Highlighted Green with celebration puck) -->
+<div class="flex flex-col items-center gap-2 flex-1 relative">
+<div class="absolute -top-3 w-4 h-4 rounded-full bg-secondary flex items-center justify-center shadow-md animate-bounce">
+<span class="material-symbols-outlined text-on-secondary text-[10px]">check</span>
+</div>
+<div class="w-full max-w-[32px] h-28 rounded-full bg-secondary-container/50 flex items-end p-1 shadow-[0_4px_14px_rgba(34,197,94,0.3)]">
+<div class="w-full h-24 rounded-full bg-secondary"></div>
+</div>
+<div class="w-3 h-3 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+</div>
+<!-- Day 6 -->
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full max-w-[28px] h-14 rounded-full bg-surface-container flex items-end p-1 transition-all">
+<div class="w-full h-6 rounded-full bg-surface-container-highest"></div>
+</div>
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-high"></div>
+</div>
+<!-- Day 7 -->
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full max-w-[28px] h-12 rounded-full bg-surface-container flex items-end p-1 transition-all">
+<div class="w-full h-3 rounded-full bg-surface-container-highest"></div>
+</div>
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-high"></div>
+</div>
+</div>
+</div>
+<!-- Subject Progress Breakdown Section -->
+<div class="flex flex-col gap-space-sm">
+<!-- Header Decorator -->
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">category</span>
+<div class="w-28 h-3.5 rounded-full bg-surface-container-highest"></div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-outline text-[18px]">tune</span>
+</div>
+</div>
+<!-- Subject 1: Math / Logic (Compass Icon, Emerald Green) -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-md shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-center gap-space-sm active:scale-[0.98] transition-all">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[26px]">explore</span>
+</div>
+<div class="flex-1 flex flex-col gap-2 min-w-0">
+<div class="flex items-center justify-between">
+<div class="w-24 h-3.5 rounded-full bg-surface-container-highest"></div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="w-6 h-2.5 rounded-full bg-secondary/30"></div>
+</div>
+</div>
+<!-- Progress track -->
+<div class="w-full h-3 rounded-full bg-surface-container-low overflow-hidden p-0.5">
+<div class="h-full rounded-full bg-[#22C55E] w-[82%] shadow-sm"></div>
+</div>
+<div class="w-40 h-2 rounded-full bg-surface-container"></div>
+</div>
+</div>
+<!-- Subject 2: Science / Discovery (Microscope Icon, Sky Blue) -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-md shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-center gap-space-sm active:scale-[0.98] transition-all">
+<div class="w-12 h-12 rounded-2xl bg-primary-container/40 flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[26px]">biotech</span>
+</div>
+<div class="flex-1 flex flex-col gap-2 min-w-0">
+<div class="flex items-center justify-between">
+<div class="w-20 h-3.5 rounded-full bg-surface-container-highest"></div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[16px]" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<div class="w-6 h-2.5 rounded-full bg-primary/30"></div>
+</div>
+</div>
+<!-- Progress track -->
+<div class="w-full h-3 rounded-full bg-surface-container-low overflow-hidden p-0.5">
+<div class="h-full rounded-full bg-[#38BDF8] w-[65%] shadow-sm"></div>
+</div>
+<div class="w-32 h-2 rounded-full bg-surface-container"></div>
+</div>
+</div>
+<!-- Subject 3: Language & Stories (Book / Quill Icon, Soft Violet) -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-md shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-center gap-space-sm active:scale-[0.98] transition-all">
+<div class="w-12 h-12 rounded-2xl bg-tertiary-container/50 flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[#7C3AED] text-[26px]">history_edu</span>
+</div>
+<div class="flex-1 flex flex-col gap-2 min-w-0">
+<div class="flex items-center justify-between">
+<div class="w-28 h-3.5 rounded-full bg-surface-container-highest"></div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#7C3AED] text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+<div class="w-6 h-2.5 rounded-full bg-tertiary-fixed-dim"></div>
+</div>
+</div>
+<!-- Progress track -->
+<div class="w-full h-3 rounded-full bg-surface-container-low overflow-hidden p-0.5">
+<div class="h-full rounded-full bg-[#A78BFA] w-[45%] shadow-sm"></div>
+</div>
+<div class="w-36 h-2 rounded-full bg-surface-container"></div>
+</div>
+</div>
+<!-- Subject 4: Art / Creativity (Palette Icon, Amber) -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-md shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-center gap-space-sm active:scale-[0.98] transition-all">
+<div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-amber-600 text-[26px]">palette</span>
+</div>
+<div class="flex-1 flex flex-col gap-2 min-w-0">
+<div class="flex items-center justify-between">
+<div class="w-20 h-3.5 rounded-full bg-surface-container-highest"></div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-amber-500 text-[16px]" style="font-variation-settings: 'FILL' 1;">brush</span>
+<div class="w-6 h-2.5 rounded-full bg-amber-200"></div>
+</div>
+</div>
+<!-- Progress track -->
+<div class="w-full h-3 rounded-full bg-surface-container-low overflow-hidden p-0.5">
+<div class="h-full rounded-full bg-[#FBBF24] w-[90%] shadow-sm"></div>
+</div>
+<div class="w-24 h-2 rounded-full bg-surface-container"></div>
+</div>
+</div>
+</div>
+<!-- Achievements Visual Platter / Badges Showcase -->
+<div class="w-full bg-surface-container-lowest rounded-3xl p-space-md shadow-[0_8px_24px_-4px_rgba(186,230,253,0.25)] flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-amber-600 text-[18px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<div class="w-24 h-3.5 rounded-full bg-surface-container-highest"></div>
+</div>
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[14px]">arrow_forward</span>
+</div>
+</div>
+<!-- Grid of Badges -->
+<div class="grid grid-cols-4 gap-space-xs pt-1">
+<div class="flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-surface-container-low">
+<div class="w-11 h-11 rounded-full bg-secondary-container flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-on-secondary-container text-[24px]" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+<div class="w-8 h-2 rounded-full bg-surface-container-highest"></div>
+</div>
+<div class="flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-surface-container-low">
+<div class="w-11 h-11 rounded-full bg-primary-container flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-on-primary-container text-[24px]" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+</div>
+<div class="w-10 h-2 rounded-full bg-surface-container-highest"></div>
+</div>
+<div class="flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-surface-container-low">
+<div class="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-amber-600 text-[24px]" style="font-variation-settings: 'FILL' 1;">diamond</span>
+</div>
+<div class="w-7 h-2 rounded-full bg-surface-container-highest"></div>
+</div>
+<div class="flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-surface-container-low opacity-50">
+<div class="w-11 h-11 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-[22px]">lock</span>
+</div>
+<div class="w-6 h-2 rounded-full bg-surface-container-high"></div>
+</div>
+</div>
+</div>
+<!-- Primary Floating Action Node (Non-verbal Celebration Trigger) -->
+<div class="w-full flex justify-center pt-space-xs pb-space-sm">
+<button class="w-full h-14 rounded-full bg-secondary text-on-secondary flex items-center justify-center gap-space-sm shadow-[0_12px_28px_-6px_rgba(34,197,94,0.45)] active:scale-95 transition-all" id="celebrateBtn">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<div class="w-24 h-3.5 rounded-full bg-on-secondary/80"></div>
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+</button>
+</div>
+</div>
+<script>
+  // Dynamic visual feedback micro-interaction for child joy
+  document.getElementById('celebrateBtn')?.addEventListener('click', function() {
+    this.classList.add('scale-95');
+    setTimeout(() => this.classList.remove('scale-95'), 150);
+  });
+
+  // Ensure bottom shell navigation shows analytics icon as active
+  const navLinks = document.querySelectorAll('nav a');
+  navLinks.forEach(link => {
+    if (link.getAttribute('data-path') === 'progress-analytics') {
+      link.classList.remove('text-on-surface-variant');
+      link.classList.add('bg-primary-container', 'text-on-primary-container', 'shadow-sm');
+    }
+  });
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.04)]" data-active-classes="bg-primary-container text-on-primary-container shadow-sm"><div class="h-16 px-space-sm flex items-center justify-around"><a class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="explore" href="#"><span class="material-symbols-outlined text-[24px]">cottage</span></a><a class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="learning-modules" href="#"><span class="material-symbols-outlined text-[24px]">auto_stories</span></a><a class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="quiz-challenges" href="#"><span class="material-symbols-outlined text-[24px]">verified</span></a><a aria-current="page" class="w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 bg-primary-container text-on-primary-container shadow-sm" data-path="progress-analytics" href="#"><span class="material-symbols-outlined text-[24px]">equalizer</span></a><a class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="learner-profile" href="#"><span class="material-symbols-outlined text-[24px]">sentiment_satisfied</span></a></div></nav></body></html>
