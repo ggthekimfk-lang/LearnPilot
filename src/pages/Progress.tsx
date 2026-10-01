@@ -18,7 +18,7 @@ function Progress() {
                     </p>
 
                     <p className="text-4xl font-bold mt-2 text-blue-600">
-                        75%
+                        0%
                     </p>
                 </div>
 
@@ -28,7 +28,7 @@ function Progress() {
                     </p>
 
                     <p className="text-4xl font-bold mt-2">
-                        12
+                        0
                     </p>
                 </div>
 
@@ -38,7 +38,7 @@ function Progress() {
                     </p>
 
                     <p className="text-4xl font-bold mt-2">
-                        7 🔥
+                        0 🔥
                     </p>
                 </div>
             </div>

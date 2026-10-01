@@ -1,0 +1,16 @@
+.lp-profile-hero { display: flex; align-items: center; gap: 24px; background: linear-gradient(120deg, #eff5ff, #fff); }
+.lp-profile-avatar { display: grid; place-items: center; width: 80px; height: 80px; flex-shrink: 0; border-radius: 24px; background: var(--green); color: white; font-size: 32px; font-weight: 700; }
+.lp-profile-hero > div { min-width: 0; }
+.lp-profile-hero h2, .lp-profile-email { overflow-wrap: anywhere; }
+.lp-profile-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.lp-profile-stats .lp-card { margin-bottom: 0; display: grid; gap: 8px; }
+.lp-profile-stats strong { color: var(--green); font-size: 32px; }
+.lp-profile-stats span { color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) {
+  .lp-profile-hero { gap: 16px; }
+  .lp-profile-avatar { width: 60px; height: 60px; border-radius: 18px; font-size: 26px; }
+  .lp-profile-stats { gap: 8px; }
+  .lp-profile-stats .lp-card { padding: 14px 10px; }
+  .lp-profile-stats span { font-size: 11px; }
+  .lp-app .lp-bottom button { min-width: 0; padding: 8px 5px; flex: 1; }
+}

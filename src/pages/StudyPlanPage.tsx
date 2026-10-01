@@ -31,8 +31,8 @@ function StudyPlanPage({ onNavigate }: StudyPlanPageProps) {
           </div>
 
           {/* Exam Date */}
-          <div className="mt-4 bg-warning-light rounded-xl p-3 flex items-center gap-3">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="mt-4 bg-gray-50 rounded-xl p-3 flex items-center gap-3 border border-dashed border-gray-200">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -40,7 +40,7 @@ function StudyPlanPage({ onNavigate }: StudyPlanPageProps) {
             </svg>
             <div>
               <p className="text-xs text-gray-500">Exam Date</p>
-              <p className="text-sm font-bold text-gray-800">Apr 28, 2025 (7 days left)</p>
+              <p className="text-sm text-gray-400">ยังไม่ได้กำหนดวันสอบ</p>
             </div>
           </div>
         </div>
@@ -50,42 +50,12 @@ function StudyPlanPage({ onNavigate }: StudyPlanPageProps) {
       <div className="px-5 mt-5">
         <h3 className="text-base font-bold text-gray-800 mb-3">Today's Tasks</h3>
 
-        <div className="space-y-3 stagger-children">
-          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary-light rounded-full flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B9B6B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">Review Transport Layer (Theory)</p>
-            </div>
-            <span className="text-xs text-gray-400 font-medium">30 min</span>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary-light rounded-full flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B9B6B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">Practice Quiz (Layer 3)</p>
-            </div>
-            <span className="text-xs text-gray-400 font-medium">20 min</span>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary-light rounded-full flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B9B6B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">Review Network Layer (Notes)</p>
-            </div>
-            <span className="text-xs text-gray-400 font-medium">25 min</span>
-          </div>
+        <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+          <div className="text-5xl mb-4">📋</div>
+          <h2 className="text-base font-bold text-gray-800">ยังไม่มีแผนการเรียน</h2>
+          <p className="text-sm text-gray-500 mt-2">
+            เพิ่ม Study Material เพื่อให้ AI สร้างแผนการเรียนให้คุณ
+          </p>
         </div>
       </div>
 
