@@ -191,7 +191,7 @@ export default function LeanPilot() {
   </article>
 
   if (!authReady) return <main className="lp-app lp-main"><Skeleton label="กำลังโหลดบัญชี" /></main>
-  if (!session) return <Auth notice={notice} error={error} busy={busy} run={run} setNotice={setNotice} />
+  if (!session) return <Auth clearFeedback={() => { setError(''); setNotice('') }} notice={notice} error={error} busy={busy} run={run} setNotice={setNotice} />
 
   const lessonNeighbor = (m: Material, offset: number) => {
     const lessons = snapshot.materials.filter(lesson => lesson.course_id === m.course_id).sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -226,7 +226,7 @@ export default function LeanPilot() {
 }
 
 type Run = (action: () => Promise<void>) => Promise<void>
-function Auth({ busy, error, notice, run, setNotice }: { busy: boolean; error: string; notice: string; run: Run; setNotice: (s: string) => void }) {
+function Auth({ busy, error, notice, run, setNotice, clearFeedback }: { busy: boolean; error: string; notice: string; run: Run; setNotice: (s: string) => void; clearFeedback: () => void }) {
   const [register, setRegister] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
@@ -262,8 +262,8 @@ function Auth({ busy, error, notice, run, setNotice }: { busy: boolean; error: s
     <form className="lp-card lp-auth-card" onSubmit={submit} aria-busy={busy}>
       <a className="lp-brand" href="#"><span><Icon name="compass" /></span> LearnPilot</a>
       <div className="lp-auth-tabs" role="group" aria-label="บัญชีผู้ใช้">
-        <button type="button" aria-pressed={!register} disabled={busy} onClick={() => { setRegister(false); setShowPassword(false) }}>เข้าสู่ระบบ</button>
-        <button type="button" aria-pressed={register} disabled={busy} onClick={() => { setRegister(true); setShowPassword(false) }}>สมัครสมาชิก</button>
+        <button type="button" aria-pressed={!register} disabled={busy} onClick={() => { setRegister(false); setShowPassword(false); clearFeedback() }}>เข้าสู่ระบบ</button>
+        <button type="button" aria-pressed={register} disabled={busy} onClick={() => { setRegister(true); setShowPassword(false); clearFeedback() }}>สมัครสมาชิก</button>
       </div>
       <h1>{register ? 'เริ่มเรียนกับ LearnPilot' : 'เข้าสู่ระบบ'}</h1>
       <p>{register ? 'สร้างบัญชีด้วยอีเมลและรหัสผ่าน' : 'ใช้อีเมลและรหัสผ่านที่สมัครไว้'}</p>
@@ -271,7 +271,7 @@ function Auth({ busy, error, notice, run, setNotice }: { busy: boolean; error: s
       {error && <p role="alert" className="lp-error">{error}</p>}
       {notice && <p role="status" className="lp-auth-notice">{notice}</p>}
       <label htmlFor="lp-auth-email">อีเมล</label>
-      <input id="lp-auth-email" type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" placeholder="name@example.com" autoCapitalize="none" spellCheck={false} required disabled={busy} />
+      <input id="lp-auth-email" type="email" name="email" value={email} onChange={e => { setEmail(e.target.value); clearFeedback() }} autoComplete="username" placeholder="name@example.com" autoCapitalize="none" spellCheck={false} required disabled={busy} />
       <label htmlFor="lp-auth-password">รหัสผ่าน</label>
       <div className="lp-password-field">
         <input id="lp-auth-password" type={showPassword ? 'text' : 'password'} name="password" minLength={register ? 8 : undefined} autoComplete={register ? 'new-password' : 'current-password'} placeholder={register ? 'อย่างน้อย 8 ตัวอักษร' : 'รหัสผ่านของคุณ'} required disabled={busy} />
