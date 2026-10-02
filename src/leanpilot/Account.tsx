@@ -4,7 +4,6 @@ import type { User } from '@supabase/supabase-js'
 import { client } from './api'
 import type { Snapshot } from './types'
 import './account.css'
-import Mascot from './Mascot'
 
 type Props = {
   user: User
@@ -45,7 +44,7 @@ export default function Account({ user, snapshot, busy, online, run, notify, set
   return <>
     <div className="lp-heading"><div><span className="lp-eyebrow">YOUR PERSONAL SPACE</span><h1>บัญชีของฉัน</h1><p>จัดการข้อมูลส่วนตัวและดูภาพรวมการเรียนของคุณ</p></div></div>
     <section className="lp-card lp-profile-hero">
-      <Mascot size="hero" />
+      <span className="lp-profile-avatar" aria-hidden="true">{displayName.slice(0, 1).toUpperCase()}</span>
       <div><h2>{displayName}</h2><p className="lp-profile-email">{user.email || 'ไม่มีอีเมล'}</p><span className="lp-tag">{user.email_confirmed_at ? 'ยืนยันอีเมลแล้ว' : 'ยังไม่ยืนยันอีเมล'}</span></div>
     </section>
     <div className="lp-profile-stats" aria-label="ภาพรวมการเรียน">
