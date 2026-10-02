@@ -1,5 +1,6 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import './pdf-compat'
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import workerUrl from './pdf.worker.ts?worker&url'
 import { extractPdfText } from './pdf-text'
 GlobalWorkerOptions.workerSrc = workerUrl
 
