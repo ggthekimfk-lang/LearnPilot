@@ -148,6 +148,18 @@
 .lp-course-body { padding:22px; }
 .lp-course-body p { font-size:13px; min-height:48px; }
 .lp-course-body h3 { font-size:18px; }
+.lp-simple-courses { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:900px; }
+.lp-course-label { display:flex; align-items:center; gap:12px; color:var(--muted); font-size:13px; margin-bottom:18px; }
+.lp-course-label .lp-empty-icon { margin:0; width:42px; height:42px; }
+.lp-simple-courses .lp-course-body p { min-height:0; margin-bottom:24px; }
+.lp-library-back { margin-bottom:18px; }
+.lp-concept-reading { margin-top:36px; }
+.lp-concept-reading > h2 { font-size:22px; }
+.lp-concept-description { white-space:pre-line; line-height:1.9; }
+.lp-concept-source { margin-top:16px; font-size:14px; }
+.lp-concept-source summary { cursor:pointer; color:var(--primary); }
+.lp-concept-source blockquote { margin:16px 0 0; padding:12px 18px; border-left:3px solid #b7d8c7; background:#f5f8f5; white-space:pre-line; line-height:1.8; }
+@media (max-width:600px) { .lp-simple-courses { grid-template-columns:1fr; } }
 .lp-course-body button { width:100%; justify-content:space-between; margin-top:18px; font-size:13px; }
 .lp-course-journey { display:flex; flex-wrap:wrap; gap:20px; font-size:13px; color:var(--muted); margin:-4px 0 24px; }
 .lp-course-journey span { display:flex; align-items:center; gap:8px; }

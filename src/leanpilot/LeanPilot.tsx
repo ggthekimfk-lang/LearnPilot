@@ -229,7 +229,18 @@ type Run = (action: () => Promise<void>) => Promise<void>
 function Auth({ busy, error, notice, run, setNotice }: { busy: boolean; error: string; notice: string; run: Run; setNotice: (s: string) => void }) {
   const [register, setRegister] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState('')
   const submitting = useRef(false)
+  const resendConfirmation = () => {
+    if (busy || submitting.current) return
+    submitting.current = true
+    void run(async () => {
+      if (!client) throw new Error('ยังไม่ได้ตั้งค่า Supabase กรุณาดู README')
+      const { error } = await client.auth.resend({ type: 'signup', email: email.trim(), options: { emailRedirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).href } })
+      if (error) throw new Error(authErrorMessage(error))
+      setNotice('ส่งคำขออีเมลยืนยันแล้ว หากบัญชียังรอยืนยัน กรุณาตรวจกล่องจดหมายและสแปม แล้วเปิดลิงก์ยืนยันก่อนเข้าสู่ระบบ')
+    }).finally(() => { submitting.current = false })
+  }
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (busy || submitting.current) return
@@ -260,7 +271,7 @@ function Auth({ busy, error, notice, run, setNotice }: { busy: boolean; error: s
       {error && <p role="alert" className="lp-error">{error}</p>}
       {notice && <p role="status" className="lp-auth-notice">{notice}</p>}
       <label htmlFor="lp-auth-email">อีเมล</label>
-      <input id="lp-auth-email" type="email" name="email" autoComplete="username" placeholder="name@example.com" autoCapitalize="none" spellCheck={false} required disabled={busy} />
+      <input id="lp-auth-email" type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" placeholder="name@example.com" autoCapitalize="none" spellCheck={false} required disabled={busy} />
       <label htmlFor="lp-auth-password">รหัสผ่าน</label>
       <div className="lp-password-field">
         <input id="lp-auth-password" type={showPassword ? 'text' : 'password'} name="password" minLength={register ? 8 : undefined} autoComplete={register ? 'new-password' : 'current-password'} placeholder={register ? 'อย่างน้อย 8 ตัวอักษร' : 'รหัสผ่านของคุณ'} required disabled={busy} />
@@ -268,6 +279,7 @@ function Auth({ busy, error, notice, run, setNotice }: { busy: boolean; error: s
       </div>
       <button type="submit" className="lp-auth-submit" disabled={busy || !client}>{busy ? 'กำลังดำเนินการ…' : register ? 'สร้างบัญชี' : 'เข้าสู่ระบบ'}</button>
       <p className="lp-auth-help">{register ? 'หากมีบัญชีแล้ว เลือกเข้าสู่ระบบด้านบน ไม่ต้องสมัครซ้ำ' : 'หากเพิ่งสมัคร ให้ยืนยันอีเมลจากข้อความที่ได้รับก่อนเข้าสู่ระบบ'}</p>
+      {!register && <button type="button" className="lp-link" disabled={busy || !client || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())} onClick={resendConfirmation}>ส่งอีเมลยืนยันอีกครั้ง</button>}
     </form>
   </main>
 }

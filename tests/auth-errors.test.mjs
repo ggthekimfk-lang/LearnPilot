@@ -1,6 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { authErrorMessage } from '../src/leanpilot/auth-errors.ts'
+test('other-email signup delivery restrictions and invalid credentials have distinct guidance', () => {
+  assert.match(authErrorMessage({ code: 'email_address_not_authorized', message: 'Email address not authorized' }), /Custom SMTP/)
+  assert.match(authErrorMessage({ message: 'Email address "test@example.com" cannot be used as it is not authorized' }), /Custom SMTP/)
+  assert.match(authErrorMessage({ code: 'invalid_credentials', message: 'Invalid login credentials' }), /อีเมลหรือรหัสผ่านไม่ถูกต้อง/)
+  assert.match(authErrorMessage({ message: 'Email not confirmed' }), /ส่งอีเมลยืนยันอีกครั้ง/)
+})
 test('email quota is distinct from generic throttling and does not promise an unsupported reset time', () => {
   const result = authErrorMessage({ code: 'over_email_send_rate_limit', status: 429, message: 'email rate limit exceeded' })
   assert.match(result, /อีเมลยืนยันถึงขีดจำกัด/)
