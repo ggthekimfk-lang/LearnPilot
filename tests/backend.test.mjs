@@ -15,7 +15,7 @@ before(async () => {
     create schema auth; create table auth.users(id uuid primary key);
     create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
     insert into auth.users values('${userA}'),('${userB}');`)
-  for (const file of ['202609300001_leanpilot.sql', '202609300002_analysis.sql', '202609300003_plan_management.sql', '202609300004_question_review.sql']) await db.exec(await readFile(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'))
+  for (const file of ['202609300001_leanpilot.sql', '202609300002_analysis.sql', '202609300003_plan_management.sql', '202609300004_question_review.sql', '202610020005_safety_fixes.sql', '202610020006_transient_retry.sql']) await db.exec(await readFile(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'))
   await login(userA)
 })
 after(async () => { await db.close() })
@@ -34,14 +34,28 @@ test('ownership, limits, and import idempotency', async () => {
   await assert.rejects(rpc('lp_delete_content', [content]))
   await login(userA)
 })
+test('plan repair can run twice without losing data or changing function identities', async () => {
+  const before = await rpc('lp_snapshot')
+  const signatures = ['public.lp_rebalance()', 'public.lp_course_edit(uuid,text,date)', 'public.lp_summary_viewed(uuid)']
+  const ids = await Promise.all(signatures.map(s => call('select to_regprocedure($1)::oid value', [s])))
+  const repair = await readFile(new URL('../supabase/repairs/003_plan_management.sql', import.meta.url), 'utf8')
+  await db.exec(repair)
+  await db.exec(repair)
+  assert.deepEqual(await rpc('lp_snapshot'), before)
+  assert.deepEqual(await Promise.all(signatures.map(s => call('select to_regprocedure($1)::oid value', [s]))), ids)
+  for (const signature of signatures) {
+    assert.equal(await call("select has_function_privilege('anon',$1,'EXECUTE') value", [signature]), false)
+    assert.equal(await call("select has_function_privilege('authenticated',$1,'EXECUTE') value", [signature]), true)
+  }
+})
 test('worker claim is leased and output is atomically published', async () => {
-  await rpc('lp_claim_analysis', [content, userA, 'test-model'])
+  const claim = await rpc('lp_claim_analysis', [content, userA, 'test-model'])
   await assert.rejects(rpc('lp_claim_analysis', [content, userA, 'test-model']))
   const reference = { section: 1, excerpt: 'TCP provides reliable transport' }
   const output = { summary: { overview: 'Transport', references: [reference], points: [{ text: 'TCP reliable', references: [reference] }] },
     concepts: [1, 2, 3].map(i => ({ id: `c${i}`, name: `Concept ${i}`, description: 'Transport', references: [reference] })),
     questions: Array.from({ length: 20 }, (_, i) => ({ concept_id: `c${i % 3 + 1}`, prompt: `Question ${i}`, choices: ['A', 'B', 'C', 'D'], correct: i % 4, explanation: 'Source explains this', reference })) }
-  await rpc('lp_publish_analysis', [content, userA, output, 42])
+  await rpc('lp_publish_analysis', [content, userA, output, 42, claim.analysis_claim])
   const snapshot = await rpc('lp_snapshot')
   assert.equal(snapshot.materials[0].status, 'ready')
   assert.equal(snapshot.materials[0].concepts[0].id, `${content}:c1`)
@@ -142,8 +156,8 @@ test('multiple courses share one daily capacity and plan history is preserved', 
   const id = '10000000-0000-0000-0000-000000000003'
   const reference = { section: 1, excerpt: 'Reliable transport' }
   await rpc('lp_import', [c, 'Second material', 'Reliable transport is important. '.repeat(10), id])
-  await rpc('lp_claim_analysis', [id, userA, 'test-model'])
-  await rpc('lp_publish_analysis', [id, userA, { summary: { overview: 'Reliable', references: [reference], points: [{ text: 'Transport', references: [reference] }] }, concepts: [{ id: 'c1', name: 'Other concept', description: 'Transport', references: [reference] }], questions: [1,2,3].map(i => ({ concept_id: 'c1', prompt: `Second question ${i}`, choices: ['a','b','c','d'], correct: 0, explanation: 'Reliable', reference })) }, 1])
+  const claim = await rpc('lp_claim_analysis', [id, userA, 'test-model'])
+  await rpc('lp_publish_analysis', [id, userA, { summary: { overview: 'Reliable', references: [reference], points: [{ text: 'Transport', references: [reference] }] }, concepts: [{ id: 'c1', name: 'Other concept', description: 'Transport', references: [reference] }], questions: [1,2,3].map(i => ({ concept_id: 'c1', prompt: `Second question ${i}`, choices: ['a','b','c','d'], correct: 0, explanation: 'Reliable', reference })) }, 1, claim.analysis_claim])
   const next = await rpc('lp_start_quiz', [id])
   const a = (await rpc('lp_snapshot')).attempts.find(a => a.id === next)
   await rpc('lp_submit_quiz', [next, Object.fromEntries(a.questions.map(q => [q.id, 0]))])
@@ -176,4 +190,70 @@ test('deletion removes derivative data and future plan tasks', async () => {
   assert.ok(state.plans.every(p => p.tasks.every(t => t.content_id !== content)))
   assert.equal(await call('select count(*)::int value from lp_private.questions'), 0)
   assert.equal(await call('select count(*)::int value from public.lp_deletions where content_id=$1', [content]), 1)
+})
+
+
+test('preferences reject null, missing, wrong types and fractional minutes without changing saved values', async () => {
+  await login(userA)
+  const before = (await rpc('lp_snapshot')).preferences
+  const valid = { minutes: 30, timezone: 'Asia/Bangkok', days: [1, 2], language: 'th' }
+  const invalid = [null, [], {}, ...Object.keys(valid).map(key => ({ ...valid, [key]: null })),
+    { ...valid, minutes: '30' }, { ...valid, minutes: 30.5 }, { ...valid, minutes: 0 },
+    { ...valid, days: [null] }, { ...valid, timezone: 'invalid' }, { ...valid, language: 'xx' }]
+  for (const settings of invalid) await assert.rejects(rpc('lp_preferences_save', [settings]))
+  assert.deepEqual((await rpc('lp_snapshot')).preferences, before)
+})
+
+test('expired worker cannot fail or publish a newer claim, and old RPC signatures are removed', async () => {
+  await login(userA)
+  const courseId = await rpc('lp_create_course', ['Claim isolation', 'test', null])
+  const id = '10000000-0000-0000-0000-000000000099'
+  await rpc('lp_import', [courseId, 'test', 'Reliable transport. '.repeat(20), id])
+  const old = await rpc('lp_claim_analysis', [id, userA, 'old-worker'])
+  await db.query("update public.lp_content set claimed_at=now()-interval '6 minutes' where id=$1", [id])
+  const current = await rpc('lp_claim_analysis', [id, userA, 'new-worker'])
+  assert.notEqual(old.analysis_claim, current.analysis_claim)
+  await rpc('lp_fail_analysis', [id, userA, 'late failure', old.analysis_claim])
+  await assert.rejects(rpc('lp_publish_analysis', [id, userA, {}, 1, old.analysis_claim]))
+  await assert.rejects(rpc('lp_publish_analysis', [id, userA, {}, 1, null]))
+  const row = (await db.query('select status,error,analysis_claim from public.lp_content where id=$1', [id])).rows[0]
+  assert.equal(row.status, 'analyzing')
+  assert.equal(row.error, null)
+  assert.equal(row.analysis_claim, current.analysis_claim)
+  for (const signature of ['public.lp_publish_analysis(uuid,uuid,jsonb,integer)', 'public.lp_fail_analysis(uuid,uuid,text)']) {
+    assert.equal(await call('select to_regprocedure($1) value', [signature]), null)
+  }
+  for (const signature of ['public.lp_publish_analysis(uuid,uuid,jsonb,integer,uuid)', 'public.lp_fail_analysis(uuid,uuid,text,uuid)']) {
+    assert.equal(await call("select has_function_privilege('authenticated',$1,'EXECUTE') value", [signature]), false)
+    assert.equal(await call("select has_function_privilege('service_role',$1,'EXECUTE') value", [signature]), true)
+  }
+  await rpc('lp_fail_analysis', [id, userA, 'current failure', current.analysis_claim])
+  assert.equal((await db.query('select status from public.lp_content where id=$1', [id])).rows[0].status, 'failed')
+  await rpc('lp_delete_content', [id])
+})
+
+
+test('provider 503 refunds one retry and outage recovery is idempotent', async () => {
+  await login(userA)
+  const courseId = await rpc('lp_create_course', ['Provider recovery', 'test', null])
+  const id = '10000000-0000-0000-0000-000000000098'
+  await rpc('lp_import', [courseId, 'test', 'Source text. '.repeat(30), id])
+  for (let i = 0; i < 4; i++) {
+    const claim = await rpc('lp_claim_analysis', [id, userA, 'test-model'])
+    await rpc('lp_fail_analysis', [id, userA, 'Gemini HTTP 503', claim.analysis_claim])
+    await rpc('lp_fail_analysis', [id, userA, 'Gemini HTTP 503', claim.analysis_claim])
+    assert.equal(await call('select retry_count value from public.lp_content where id=$1', [id]), 0)
+  }
+  const claim = await rpc('lp_claim_analysis', [id, userA, 'test-model'])
+  await rpc('lp_fail_analysis', [id, userA, 'Validation failed', claim.analysis_claim])
+  assert.equal(await call('select retry_count value from public.lp_content where id=$1', [id]), 1)
+  await db.query("update public.lp_content set retry_count=3,error='Gemini HTTP 503' where id=$1", [id])
+  const repair = await readFile(new URL('../supabase/migrations/202610020006_transient_retry.sql', import.meta.url), 'utf8')
+  await db.exec(repair)
+  await db.exec(repair)
+  assert.equal(await call('select retry_count value from public.lp_content where id=$1', [id]), 2)
+  const recovered = await rpc('lp_claim_analysis', [id, userA, 'test-model'])
+  await rpc('lp_fail_analysis', [id, userA, 'Validation failed', recovered.analysis_claim])
+  await assert.rejects(rpc('lp_claim_analysis', [id, userA, 'test-model']))
+  await rpc('lp_delete_content', [id])
 })

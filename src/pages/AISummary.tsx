@@ -209,7 +209,7 @@ function AISummary({
                 </p>
 
                 <p className="text-xs text-gray-400 mt-3">
-                  ขั้นตอนถัดไปเราจะเชื่อม OpenAI เพื่อสร้าง Summary
+                  ขั้นตอนถัดไปเราจะเชื่อม Gemini เพื่อสร้าง Summary
                   จาก Study Material
                 </p>
               </div>

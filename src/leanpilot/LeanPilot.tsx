@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { analyze, client, loadSnapshot, rpc } from './api'
@@ -35,19 +35,31 @@ export default function LeanPilot() {
   const [downloaded, setDownloaded] = useState(false)
   const [update, setUpdate] = useState<ServiceWorker | null>(null)
   const [installPrompt, setInstallPrompt] = useState<(Event & { prompt: () => Promise<void> }) | null>(null)
+  const identity = useRef({ user: undefined as string | undefined, generation: 0 })
   const user = session?.user.id
 
   useEffect(() => {
     if (!client) return
     let active = true
+    let authObserved = false
+    const acceptSession = (value: Session | null) => {
+      const nextUser = value?.user.id
+      if (identity.current.user !== nextUser) {
+        identity.current = { user: nextUser, generation: identity.current.generation + 1 }
+        setSnapshot(emptySnapshot); setSelected(null); setAttemptId(null)
+        setDownloaded(false); setSyncCount(0); setBusy(false); setError(''); setNotice('')
+      }
+      setSession(value); setAuthReady(true)
+      if (!value) clearPrivate()
+    }
     void client.auth.getSession().then(({ data, error }) => {
-      if (!active) return
-      setSession(data.session); setAuthReady(true)
+      if (!active || authObserved) return
+      acceptSession(data.session)
       if (error) setError(error.message)
     })
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, value) => {
-      setSession(value); setAuthReady(true)
-      if (!value) { clearPrivate(); setSnapshot(emptySnapshot); setSelected(null); setAttemptId(null) }
+      authObserved = true
+      if (active) acceptSession(value)
     })
     return () => { active = false; subscription.unsubscribe() }
   }, [])
@@ -70,33 +82,40 @@ export default function LeanPilot() {
 
   const refresh = useCallback(async () => {
     if (!user) return
+    const generation = identity.current.generation
     const data = await loadSnapshot()
+    if (identity.current.user !== user || identity.current.generation !== generation) throw new Error('Session changed')
     setSnapshot(data)
     if (readSaved(user)) { saveOffline(user, data); setDownloaded(true) }
   }, [user])
   const run = useCallback(async (action: () => Promise<void>) => {
+    const generation = identity.current.generation
     setBusy(true); setError(''); setNotice('')
-    try { await action() } catch (e) { setError(message(e)) } finally { setBusy(false) }
+    try { await action() } catch (e) { if (identity.current.generation === generation) setError(message(e)) } finally { if (identity.current.generation === generation) setBusy(false) }
   }, [])
   useEffect(() => {
     if (!user) return
     let active = true
+    const generation = identity.current.generation
+    const current = () => active && identity.current.user === user && identity.current.generation === generation
     const saved = readSaved(user)
     // Downloads are user-scoped. They are loaded only after a matching auth session.
     const load = async () => {
       if (!online) {
-        if (active) { setSnapshot(saved || emptySnapshot); setDownloaded(!!saved); setSyncCount(events(user).length) }
+        if (current()) { setSnapshot(saved || emptySnapshot); setDownloaded(!!saved); setSyncCount(events(user).length) }
         return
       }
       try {
         for (const event of events(user)) {
+          if (!current()) return
           const matched = await rpc<boolean>('lp_task_event', { p_event: event.id, p_plan: event.plan_id, p_task: event.task_id, p_status: event.status })
+          if (!current()) return
           removeEvent(user, event.id)
-          if (!matched && active) setNotice('แผนเปลี่ยนระหว่าง offline โหลดแผนล่าสุดแล้ว กรุณาตรวจสอบกิจกรรมที่ค้าง')
+          if (!matched && current()) setNotice('แผนเปลี่ยนระหว่าง offline โหลดแผนล่าสุดแล้ว กรุณาตรวจสอบกิจกรรมที่ค้าง')
         }
         const data = await loadSnapshot()
-        if (active) { setSnapshot(data); setSyncCount(events(user).length); setDownloaded(!!saved); if (saved) saveOffline(user, data) }
-      } catch (e) { if (active) { setError(message(e)); if (saved) setSnapshot(saved) } }
+        if (current()) { setSnapshot(data); setSyncCount(events(user).length); const optedIn = !!readSaved(user); setDownloaded(optedIn); if (optedIn) saveOffline(user, data) }
+      } catch (e) { if (current()) { setError(message(e)); if (saved) setSnapshot(saved) } }
     }
     void load()
     return () => { active = false }
@@ -104,8 +123,10 @@ export default function LeanPilot() {
   const processing = snapshot.materials.some(m => ['queued', 'analyzing', 'extracting'].includes(m.status))
   useEffect(() => {
     if (!online || !user || !processing) return
-    const timer = window.setInterval(() => { void refresh().catch(e => setError(message(e))) }, 5000)
-    return () => window.clearInterval(timer)
+    let active = true
+    const generation = identity.current.generation
+    const timer = window.setInterval(() => { void refresh().catch(e => { if (active && identity.current.generation === generation) setError(message(e)) }) }, 5000)
+    return () => { active = false; window.clearInterval(timer) }
   }, [online, user, processing, refresh])
 
   const material = snapshot.materials.find(m => m.id === selected)
@@ -126,7 +147,7 @@ export default function LeanPilot() {
     } else {
       queueEvent(user, t.id, status, p.id); setSyncCount(events(user).length)
       const next = { ...snapshot, plans: snapshot.plans.map(plan => plan.id === p.id ? { ...plan, tasks: plan.tasks.map(task => task.id === t.id ? { ...task, status } : task) } : plan) }
-      saveOffline(user, next); setSnapshot(next); setNotice('บันทึกบนอุปกรณ์แล้ว จะ sync เมื่อออนไลน์')
+      if (readSaved(user)) saveOffline(user, next); setSnapshot(next); setNotice('บันทึกบนอุปกรณ์แล้ว จะ sync เมื่อออนไลน์')
     }
   })
   const taskCard = (t: Task & { plan: Plan }) => <article className="lp-card lp-task" key={t.id}>
@@ -152,7 +173,7 @@ export default function LeanPilot() {
         {error && <div className="lp-alert error" role="alert">{error}<button aria-label="ปิดข้อความผิดพลาด" onClick={() => setError('')}>×</button></div>}
         {notice && <div className="lp-alert" role="status">{notice}<button aria-label="ปิดข้อความ" onClick={() => setNotice('')}>×</button></div>}
         {!online && <div className="lp-alert">{downloaded ? 'กำลังอ่านข้อมูลที่บันทึกไว้ คะแนนและแผนจะอัปเดตเมื่อออนไลน์' : 'ยังไม่มีข้อมูลที่ดาวน์โหลดไว้ กรุณาออนไลน์แล้วบันทึกในตั้งค่า'}</div>}
-        {update && <div className="lp-alert">มีเวอร์ชันใหม่พร้อมใช้งาน <button disabled={!!attempt && !attempt.result} onClick={() => { update.postMessage({ type: 'SKIP_WAITING' }); window.location.reload() }}>อัปเดตแอป</button>{attempt && !attempt.result && <small>ส่ง quiz หรือออกจาก quiz ก่อนอัปเดต</small>}</div>}
+        {update && <div className="lp-alert">มีเวอร์ชันใหม่พร้อมใช้งาน <button disabled={!!attempt && !attempt.result} onClick={() => { const reload = () => window.location.reload(); navigator.serviceWorker.addEventListener('controllerchange', reload, { once: true }); update.postMessage({ type: 'SKIP_WAITING' }) }}>อัปเดตแอป</button>{attempt && !attempt.result && <small>ส่ง quiz หรือออกจาก quiz ก่อนอัปเดต</small>}</div>}
         {page === 'plan' && !material && <CapacityNotice snapshot={snapshot} />}{attempt && material ? <Quiz key={attempt.id} attempt={attempt} material={material} busy={busy} online={online} run={run} refresh={refresh} onBack={() => setAttemptId(null)} report={(entity, description) => run(async () => { await rpc('lp_report', { p_content: material.id, p_entity: entity, p_description: description }); setNotice('ส่งรายงานแล้ว รอผู้ดูแลตรวจสอบ') })} /> : material ? <Content material={material} busy={busy} online={online} onBack={() => setSelected(null)} startQuiz={() => void startQuiz(material)} retry={() => void run(async () => { await analyze(material.id); await refresh() })} report={description => void run(async () => { await rpc('lp_report', { p_content: material.id, p_entity: 'summary', p_description: description }); setNotice('ส่งรายงานแล้ว') })} /> : <>
           {page === 'today' && <>
             <div className="lp-heading"><div><span className="lp-eyebrow"><Icon name="plan" /> {new Date().toLocaleDateString('th-TH', { timeZone: snapshot.preferences.timezone, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><h1>พื้นที่เรียนรู้ <em>ของคุณ</em></h1><p>เริ่มจากสิ่งที่ควรทบทวน แล้วตรวจความเข้าใจด้วยคำถามใหม่</p></div><button onClick={() => setPage('library')}>＋ เพิ่มเนื้อหา</button></div>
@@ -255,7 +276,7 @@ function PlanHistory({ plan }: { plan: Plan }) {
 }
 function Settings({ snapshot, busy, online, run, refresh, email, download, downloaded, clearDownload, install, logout }: { snapshot: Snapshot; busy: boolean; online: boolean; run: Run; refresh: () => Promise<void>; email: string; download: () => void; downloaded: boolean; clearDownload: () => void; install: (() => Promise<void>) | null; logout: () => void }) {
   const [days, setDays] = useState(snapshot.preferences.days)
-  return <><div className="lp-heading"><div><span className="lp-eyebrow">YOUR TIME, YOUR PACE</span><h1>ตั้งค่าให้เหมาะกับคุณ</h1><p>{email}</p></div></div><form className="lp-card" onSubmit={e => { e.preventDefault(); const data = new FormData(e.currentTarget); void run(async () => { await rpc('lp_preferences_save', { p_settings: { minutes: Number(data.get('minutes')), timezone: data.get('timezone'), days, language: data.get('language') } }); await refresh() }) }}><h2>เวลาเรียนและเป้าหมาย</h2><label>เวลาว่างต่อวัน (นาที)<input name="minutes" type="number" min={10} max={180} defaultValue={snapshot.preferences.minutes} required /></label><label>Timezone<input name="timezone" defaultValue={snapshot.preferences.timezone} required /></label><label>ภาษาที่ต้องการ<select name="language" defaultValue={snapshot.preferences.language}><option value="th">ไทย</option><option value="en">English</option></select></label><fieldset><legend>วันที่เรียนได้</legend><div className="lp-days">{['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'].map((day, i) => <label key={day}><input type="checkbox" checked={days.includes(i)} onChange={e => setDays(e.target.checked ? [...days, i] : days.filter(d => d !== i))} />{day}</label>)}</div></fieldset><p>เปลี่ยนเวลาแล้วระบบจะจัดกิจกรรมในอนาคตใหม่ โดยคงกิจกรรมที่เริ่มแล้วและล็อกไว้</p><button disabled={busy || !online || !days.length}>บันทึกและปรับแผน</button></form><section className="lp-card"><h2>อ่านแบบ offline</h2><p>บันทึกต้นฉบับ สรุป concepts และแผนล่าสุดบนอุปกรณ์นี้ ไม่บันทึกเฉลยหรือ quiz สำหรับ offline การสร้าง AI และส่ง quiz ต้องออนไลน์</p><div className="lp-actions"><button disabled={!online || busy} onClick={() => void run(async () => download())}>{downloaded ? 'อัปเดตข้อมูลที่ดาวน์โหลด' : 'บันทึกไว้บนอุปกรณ์'}</button><button className="lp-secondary" onClick={clearDownload}>ล้างเนื้อหา offline</button></div><p className="lp-muted">ข้อมูลที่ดาวน์โหลดอาจถูก browser ล้างเมื่อพื้นที่ไม่พอ ออกจากระบบจะล้างข้อมูลส่วนตัวและกิจกรรมรอ sync บนอุปกรณ์</p></section><section className="lp-card"><h2>ติดตั้ง LeanPilot</h2>{install ? <button onClick={() => void install()}>ติดตั้งแอป</button> : <p>เปิดเมนู browser แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอโฮม” หากอุปกรณ์รองรับ</p>}</section><section className="lp-card"><h2>ข้อมูลของคุณ</h2><p>ต้นฉบับและผลเรียนเก็บใน Supabase ส่วนต้นฉบับจะส่งให้ OpenAI เมื่อสั่งวิเคราะห์ ลบเนื้อหาได้ในคลังเนื้อหา การเก็บข้อมูลของผู้ให้บริการและ backup ต้องกำหนดก่อนเปิด production</p><button className="lp-secondary" disabled={busy} onClick={logout}>ออกจากระบบและล้างข้อมูลบนอุปกรณ์</button></section></>
+  return <><div className="lp-heading"><div><span className="lp-eyebrow">YOUR TIME, YOUR PACE</span><h1>ตั้งค่าให้เหมาะกับคุณ</h1><p>{email}</p></div></div><form className="lp-card" onSubmit={e => { e.preventDefault(); const data = new FormData(e.currentTarget); void run(async () => { await rpc('lp_preferences_save', { p_settings: { minutes: Number(data.get('minutes')), timezone: data.get('timezone'), days, language: data.get('language') } }); await refresh() }) }}><h2>เวลาเรียนและเป้าหมาย</h2><label>เวลาว่างต่อวัน (นาที)<input name="minutes" type="number" min={10} max={180} defaultValue={snapshot.preferences.minutes} required /></label><label>Timezone<input name="timezone" defaultValue={snapshot.preferences.timezone} required /></label><label>ภาษาที่ต้องการ<select name="language" defaultValue={snapshot.preferences.language}><option value="th">ไทย</option><option value="en">English</option></select></label><fieldset><legend>วันที่เรียนได้</legend><div className="lp-days">{['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'].map((day, i) => <label key={day}><input type="checkbox" checked={days.includes(i)} onChange={e => setDays(e.target.checked ? [...days, i] : days.filter(d => d !== i))} />{day}</label>)}</div></fieldset><p>เปลี่ยนเวลาแล้วระบบจะจัดกิจกรรมในอนาคตใหม่ โดยคงกิจกรรมที่เริ่มแล้วและล็อกไว้</p><button disabled={busy || !online || !days.length}>บันทึกและปรับแผน</button></form><section className="lp-card"><h2>อ่านแบบ offline</h2><p>บันทึกต้นฉบับ สรุป concepts และแผนล่าสุดบนอุปกรณ์นี้ ไม่บันทึกเฉลยหรือ quiz สำหรับ offline การสร้าง AI และส่ง quiz ต้องออนไลน์</p><div className="lp-actions"><button disabled={!online || busy} onClick={() => void run(async () => download())}>{downloaded ? 'อัปเดตข้อมูลที่ดาวน์โหลด' : 'บันทึกไว้บนอุปกรณ์'}</button><button className="lp-secondary" onClick={clearDownload}>ล้างเนื้อหา offline</button></div><p className="lp-muted">ข้อมูลที่ดาวน์โหลดอาจถูก browser ล้างเมื่อพื้นที่ไม่พอ ออกจากระบบจะล้างข้อมูลส่วนตัวและกิจกรรมรอ sync บนอุปกรณ์</p></section><section className="lp-card"><h2>ติดตั้ง LeanPilot</h2>{install ? <button onClick={() => void install()}>ติดตั้งแอป</button> : <p>เปิดเมนู browser แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอโฮม” หากอุปกรณ์รองรับ</p>}</section><section className="lp-card"><h2>ข้อมูลของคุณ</h2><p>ต้นฉบับและผลเรียนเก็บใน Supabase ส่วนต้นฉบับจะส่งให้ Gemini เมื่อสั่งวิเคราะห์ ลบเนื้อหาได้ในคลังเนื้อหา การเก็บข้อมูลของผู้ให้บริการและ backup ต้องกำหนดก่อนเปิด production</p><button className="lp-secondary" disabled={busy} onClick={logout}>ออกจากระบบและล้างข้อมูลบนอุปกรณ์</button></section></>
 }
 
 function CapacityNotice({ snapshot }: { snapshot: Snapshot }) {

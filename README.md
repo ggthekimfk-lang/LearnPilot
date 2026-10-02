@@ -2,7 +2,7 @@
 
 แอปตาม [PRD](docs/PRD-LeanPilot-PWA.md): เพิ่มเนื้อหา → สรุปพร้อมอ้างอิง → quiz → หลักฐานราย concept → แผนตามเวลาว่าง → ทบทวนและทดสอบใหม่
 
-ใช้ React/TypeScript/Vite, Supabase Auth/Postgres และ Supabase Edge Function สำหรับ OpenAI Responses API แอปเริ่มที่ `src/leanpilot/LeanPilot.tsx`; เก็บหน้า prototype เดิมไว้เพื่อไม่ทับงานก่อนหน้า แต่ไม่ใช้ข้อมูลตัวอย่างเดิมให้คะแนน
+ใช้ React/TypeScript/Vite, Supabase Auth/Postgres และ Supabase Edge Function สำหรับ Gemini API แอปเริ่มที่ `src/leanpilot/LeanPilot.tsx`; เก็บหน้า prototype เดิมไว้เพื่อไม่ทับงานก่อนหน้า แต่ไม่ใช้ข้อมูลตัวอย่างเดิมให้คะแนน
 
 ## เริ่มพัฒนา
 
@@ -12,7 +12,7 @@
 npm install
 ```
 
-คัดลอก `.env.example` เป็น `.env` แล้วใส่ URL และ **publishable key** ของ Supabase ห้ามใส่ service-role/OpenAI key ใน `VITE_*`
+คัดลอก `.env.example` เป็น `.env` แล้วใส่ URL และ **publishable key** ของ Supabase ห้ามใส่ service-role/Gemini key ใน `VITE_*`
 
 ```sh
 npm run dev
@@ -27,22 +27,24 @@ npm run typecheck:worker
 **Migration ยังไม่ได้ใช้กับ Supabase ที่เชื่อมอยู่** หากพบว่าไม่พบ `lp_snapshot`/`lp_rebalance` ให้ทำขั้นตอนนี้ก่อนสร้างวิชา
 
 1. ใช้โปรเจกต์ staging ที่จัดการได้ เปิด Email/Password Auth และตั้ง redirect URL ของ frontend
-2. รัน SQL ใน `supabase/migrations` ตามลำดับ `001` → `002` → `003` → `004` **ครั้งเดียว** ผ่าน SQL Editor หรือใช้ CLI workflow ด้านล่าง ตารางใหม่ใช้ prefix `lp_*` และไม่แก้ตาราง prototype เดิม
-3. Deploy `analyze-content` และตั้ง server secrets:
+2. รัน SQL ใน `supabase/migrations` ตามลำดับ `001` → `002` → `003` → `004` → `005` → `006` **ครั้งเดียว** ผ่าน SQL Editor หรือใช้ CLI workflow ด้านล่าง ตารางใหม่ใช้ prefix `lp_*` และไม่แก้ตาราง prototype เดิม
+3. สร้าง API key ที่ [Google AI Studio](https://aistudio.google.com/apikey) ตั้ง server secrets และ deploy `analyze-content`:
 
 ```sh
 supabase login
 supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
+supabase secrets set GEMINI_API_KEY=YOUR_SERVER_KEY GEMINI_MODEL=YOUR_MODEL APP_ORIGIN=https://YOUR_FRONTEND_ORIGIN
 supabase functions deploy analyze-content
-supabase secrets set OPENAI_API_KEY=YOUR_SERVER_KEY OPENAI_MODEL=YOUR_MODEL APP_ORIGIN=https://YOUR_FRONTEND_ORIGIN
 ```
 
-ใช้ `db push` เมื่อยังไม่ได้ใช้ SQL Editor หรือบันทึก migration history ให้ตรงก่อน push อย่ารันทั้งสองวิธีซ้ำ เลือก `OPENAI_MODEL` ที่บัญชีเข้าถึงได้และรองรับ Responses structured output ไม่ตั้งค่าโมเดลหรือค่าใช้จ่ายแทนผู้ดูแล
+ใช้ `db push` เมื่อยังไม่ได้ใช้ SQL Editor หรือบันทึก migration history ให้ตรงก่อน push อย่ารันทั้งสองวิธีซ้ำ เลือก `GEMINI_MODEL` ที่บัญชีเข้าถึงได้และรองรับ Gemini structured output ไม่ตั้งค่าโมเดลหรือค่าใช้จ่ายแทนผู้ดูแล
 
 Local development ใช้ `APP_ORIGIN=http://localhost:5173` หรือ origin ที่เปิดจริง (รวม port) Production ต้องเป็น HTTPS `verify_jwt=false` ใน function config เพราะ function ตรวจ bearer token ด้วย `auth.getUser` เองทุก request Worker ใช้ service role ภายใน environment ของ Supabase เท่านั้น
 
-Structured output อ้างอิง [OpenAI official documentation](https://developers.openai.com/api/docs/guides/structured-outputs)
+`npm run dev` ส่งคำขอ Edge Function ผ่าน Vite proxy บน origin เดียวกับหน้าเว็บ จึงรองรับ port ที่ Vite เลือก เช่น 5176 โดยยังส่ง token ของผู้ใช้ตามปกติ หากแก้ config แล้ว server ไม่ restart ให้เริ่ม `npm run dev` ใหม่ Production และ `npm run preview` เรียก Supabase โดยตรง จึงต้องตั้ง `APP_ORIGIN` ให้ตรงกับ origin ที่ใช้งานจริง
+
+Structured output อ้างอิง [Gemini official documentation](https://ai.google.dev/gemini-api/docs/generate-content/structured-output)
 
 ## ฟังก์ชันในโค้ด
 
@@ -58,7 +60,7 @@ Structured output อ้างอิง [OpenAI official documentation](https://
 
 ## ตรวจสอบ
 
-`npm test` ใช้ PGlite (PostgreSQL ใน WASM) สร้างฐานข้อมูลแยกและ mock เฉพาะ Supabase Auth identity ไม่อ่านหรือเปลี่ยนข้อมูลจริง มี 16 tests สำหรับ ownership/RLS/grants, import/draft/submit idempotency, key isolation, evidence, capacity/multiple courses, preserved history, missed tasks, offline conflicts, withdrawal/deletion และ output validation
+`npm test` ใช้ PGlite (PostgreSQL ใน WASM) สร้างฐานข้อมูลแยกและ mock เฉพาะ Supabase Auth identity ไม่อ่านหรือเปลี่ยนข้อมูลจริง มี 20 tests สำหรับ ownership/RLS/grants, import/draft/submit idempotency, key isolation, evidence, capacity/multiple courses, preserved history, missed tasks, offline conflicts, withdrawal/deletion และ output validation
 
 Build, lint และ worker typecheck ต้องผ่านด้วย Tests นี้ยังไม่แทน Supabase/AI live, hosted concurrency, PDF fixtures หรืออุปกรณ์จริง
 
@@ -79,3 +81,22 @@ Build, lint และ worker typecheck ต้องผ่านด้วย Test
 สมัคร/ยืนยันอีเมล → ตั้งเวลาในเมนูบัญชี → สร้างวิชา → เพิ่มเนื้อหา → รอพร้อมเรียน → เปิด references → ส่ง quiz → ดูหลักฐานและแผน → เริ่มทบทวน/บันทึกเสร็จ → เริ่มกิจกรรม quiz/ส่งชุดใหม่ → ตรวจแผนเวอร์ชันใหม่
 
 Offline ใช้ **production build** (`npm run build` + `npm run preview`): เปิดออนไลน์หนึ่งครั้ง → บันทึกข้อมูลในตั้งค่า → ตัดเครือข่าย → เปิด summary/plan และบันทึกกิจกรรม → ต่อเครือข่ายและตรวจ sync → logout แล้วตรวจ purge
+
+
+### Update for safety fixes (migration 005)
+
+For an existing database with migrations 001-004 installed, apply only
+`supabase/migrations/202610020005_safety_fixes.sql`, then deploy the updated
+`analyze-content` function. This migration changes publish/fail RPC signatures
+and requires the matching worker. Schedule the update when no analysis is running;
+interrupted jobs can be retried after their five-minute lease expires.
+The migration also rejects null or malformed preferences.
+
+
+### Recover exhausted retries after Gemini HTTP 503 (migration 006)
+
+Apply migrations 005 and 006 in order, and deploy the matching worker from this
+repository. Migration 006 restores one retry for the latest recorded Gemini 503
+failure and makes future 503 failures refund their claim. Validation failures
+still consume the three-attempt budget. Recovery does not delete content or
+reset earlier failures; replaying migration 006 does not refund twice.

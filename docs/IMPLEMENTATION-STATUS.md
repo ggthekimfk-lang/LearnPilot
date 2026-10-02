@@ -26,7 +26,7 @@ Implementation อยู่ใน repository; Supabase migration และ AI fu
 - Worker TypeScript: ผ่าน
 - PostgreSQL/schema/validation tests: 16 ผ่าน
 - localhost เปิดได้; width 360 ตรวจ DOM ไม่ overflow; UI ครบ flow ยังไม่ยืนยันเพราะ backend ยังไม่มี migration
-- Supabase hosted RLS/transactions/concurrent retry, OpenAI live, PDF fixtures, mobile PWA/sync, WCAG, latency/performance: ยังไม่ยืนยัน
+- Supabase hosted RLS/transactions/concurrent retry, Gemini live, PDF fixtures, mobile PWA/sync, WCAG, latency/performance: ยังไม่ยืนยัน
 
 ## งานก่อน pilot/production
 

@@ -1,11 +1,22 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createHash } from 'node:crypto'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  return {
+  server: {
+    proxy: env.VITE_SUPABASE_URL ? {
+      '/__supabase/functions/v1/': {
+        target: env.VITE_SUPABASE_URL,
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/__supabase/, ''),
+      },
+    } : undefined,
+  },
   plugins: [react(), tailwindcss(), {
     name: 'leanpilot-shell',
     apply: 'build',
@@ -17,4 +28,5 @@ export default defineConfig({
       writeFileSync(target, source)
     },
   }],
+  }
 })
