@@ -1,6 +1,6 @@
 # LeanPilot PWA
 
-แอปตาม [PRD](docs/PRD-LeanPilot-PWA.md): เพิ่มเนื้อหา → สรุปพร้อมอ้างอิง → quiz → หลักฐานราย concept → แผนตามเวลาว่าง → ทบทวนและทดสอบใหม่
+แอปตาม [PRD](docs/PRD-LeanPilot-PWA.md): เพิ่ม PDF/TEXT → สรุปบทเรียน → quiz → หลักฐานราย concept → แผนตามเวลาว่าง → ทบทวนและทดสอบใหม่
 
 ใช้ React/TypeScript/Vite, Supabase Auth/Postgres และ Supabase Edge Function สำหรับ Gemini API แอปเริ่มที่ `src/leanpilot/LeanPilot.tsx`; เก็บหน้า prototype เดิมไว้เพื่อไม่ทับงานก่อนหน้า แต่ไม่ใช้ข้อมูลตัวอย่างเดิมให้คะแนน
 
@@ -27,7 +27,7 @@ npm run typecheck:worker
 **Migration ยังไม่ได้ใช้กับ Supabase ที่เชื่อมอยู่** หากพบว่าไม่พบ `lp_snapshot`/`lp_rebalance` ให้ทำขั้นตอนนี้ก่อนสร้างวิชา
 
 1. ใช้โปรเจกต์ staging ที่จัดการได้ เปิด Email/Password Auth และตั้ง redirect URL ของ frontend
-2. รัน SQL ใน `supabase/migrations` ตามลำดับ `001` → `002` → `003` → `004` → `005` → `006` **ครั้งเดียว** ผ่าน SQL Editor หรือใช้ CLI workflow ด้านล่าง ตารางใหม่ใช้ prefix `lp_*` และไม่แก้ตาราง prototype เดิม
+2. รัน SQL ใน `supabase/migrations` ตามลำดับ `001` → `002` → `003` → `004` → `005` → `006` → `007` **ครั้งเดียว** ผ่าน SQL Editor หรือใช้ CLI workflow ด้านล่าง ตารางใหม่ใช้ prefix `lp_*` และไม่แก้ตาราง prototype เดิม
 3. สร้าง API key ที่ [Google AI Studio](https://aistudio.google.com/apikey) ตั้ง server secrets และ deploy `analyze-content`:
 
 ```sh
@@ -50,7 +50,8 @@ Structured output อ้างอิง [Gemini official documentation](https://
 
 - บัญชีส่วนตัว วิชา/เป้าหมาย เพิ่มข้อความ/PDF text layer จำกัด 20 MB, 100,000 ตัวอักษร และขั้นต่ำ 200 ตัวอักษร
 - งานวิเคราะห์บันทึกสถานะ/retry/lease/model/prompt version/latency ตรวจ schema, exact excerpt และ semantic review แยกก่อนเผยแพร่แบบ transaction สูงสุด 3 generation attempts ต่อเอกสาร
-- สรุป/concepts เปิด excerpt และส่วนต้นฉบับได้; ข้อความจาก PDF มี marker เลขหน้า
+- สรุปบทเรียนแสดงภาพรวม หัวข้อสำคัญ และสิ่งที่ควรจำ
+- Upload TEXT UTF-8 เพิ่มจากการวางข้อความ จำกัดไฟล์ 1 MB และ source 100,000 ตัวอักษร
 - quiz draft บน server; client ไม่ได้รับ keys/explanations ก่อนส่ง; grading/check-completeness/idempotency ฝั่ง server
 - หลักฐานจากคำถามไม่ซ้ำใน 3 attempts ล่าสุด เกณฑ์ข้อมูลอย่างน้อย 3 ข้อ และคะแนนกิจกรรมแยกจากผลทดสอบ
 - แผนเวอร์ชัน/inputs/เหตุผล จำกัดเวลาร่วมกันหลายวิชา ล็อก/เลื่อน/ข้าม/เริ่ม/เสร็จ/rollback และจัดงานที่พลาดใหม่เมื่อออนไลน์
@@ -60,9 +61,9 @@ Structured output อ้างอิง [Gemini official documentation](https://
 
 ## ตรวจสอบ
 
-`npm test` ใช้ PGlite (PostgreSQL ใน WASM) สร้างฐานข้อมูลแยกและ mock เฉพาะ Supabase Auth identity ไม่อ่านหรือเปลี่ยนข้อมูลจริง มี 20 tests สำหรับ ownership/RLS/grants, import/draft/submit idempotency, key isolation, evidence, capacity/multiple courses, preserved history, missed tasks, offline conflicts, withdrawal/deletion และ output validation
+`npm test` ใช้ PGlite (PostgreSQL ใน WASM) สร้างฐานข้อมูลแยกและ mock เฉพาะ Supabase Auth identity ไม่อ่านหรือเปลี่ยนข้อมูลจริง มี tests รวม PDF.js parser และ provider mock สำหรับ ownership/RLS/grants, import/draft/submit idempotency, key isolation, evidence, capacity/multiple courses, preserved history, missed tasks, offline conflicts, withdrawal/deletion และ output validation
 
-Build, lint และ worker typecheck ต้องผ่านด้วย Tests นี้ยังไม่แทน Supabase/AI live, hosted concurrency, PDF fixtures หรืออุปกรณ์จริง
+Build, lint และ worker typecheck ต้องผ่านด้วย Tests นี้ยังไม่แทน Supabase/AI live, hosted concurrency หรืออุปกรณ์จริง
 
 ## ข้อจำกัดก่อน pilot
 
@@ -78,7 +79,7 @@ Build, lint และ worker typecheck ต้องผ่านด้วย Test
 
 ## ทดลองครบวงจรเมื่อ backend พร้อม
 
-สมัคร/ยืนยันอีเมล → ตั้งเวลาในเมนูบัญชี → สร้างวิชา → เพิ่มเนื้อหา → รอพร้อมเรียน → เปิด references → ส่ง quiz → ดูหลักฐานและแผน → เริ่มทบทวน/บันทึกเสร็จ → เริ่มกิจกรรม quiz/ส่งชุดใหม่ → ตรวจแผนเวอร์ชันใหม่
+สมัคร/ยืนยันอีเมล → ตั้งเวลาในเมนูบัญชี → สร้างวิชา → เพิ่มเนื้อหา → รอวิเคราะห์เสร็จ → อ่านสรุปบทเรียน → สร้างแบบทดสอบ → ส่ง quiz → ดูหลักฐานและแผน → เริ่มทบทวน/บันทึกเสร็จ → เริ่มกิจกรรม quiz/ส่งชุดใหม่ → ตรวจแผนเวอร์ชันใหม่
 
 Offline ใช้ **production build** (`npm run build` + `npm run preview`): เปิดออนไลน์หนึ่งครั้ง → บันทึกข้อมูลในตั้งค่า → ตัดเครือข่าย → เปิด summary/plan และบันทึกกิจกรรม → ต่อเครือข่ายและตรวจ sync → logout แล้วตรวจ purge
 
@@ -100,3 +101,5 @@ repository. Migration 006 restores one retry for the latest recorded Gemini 503
 failure and makes future 503 failures refund their claim. Validation failures
 still consume the three-attempt budget. Recovery does not delete content or
 reset earlier failures; replaying migration 006 does not refund twice.
+
+

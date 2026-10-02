@@ -1,5 +1,6 @@
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { extractPdfText } from './pdf-text'
 GlobalWorkerOptions.workerSrc = workerUrl
 
 export async function extractPdf(file: File): Promise<string> {
@@ -9,15 +10,6 @@ export async function extractPdf(file: File): Promise<string> {
   const loading = getDocument({ data })
   const doc = await loading.promise
   try {
-    let source = ''
-    for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber++) {
-      const page = await doc.getPage(pageNumber)
-      const content = await page.getTextContent()
-      const text = content.items.map(item => 'str' in item ? item.str + (item.hasEOL ? '\n' : ' ') : '').join('').trim()
-      if (text) source += `\n[PDF หน้า ${pageNumber}]\n${text}\n`
-      if (source.length > 100000) throw new Error('ข้อความที่แยกได้เกิน 100,000 ตัวอักษร กรุณาแบ่ง PDF')
-    }
-    if (source.replace(/\[PDF หน้า \d+\]/g, '').trim().length < 200) throw new Error('PDF ไม่มี text layer หรือมีข้อความน้อยเกินไป ยังไม่รองรับเอกสารสแกน กรุณาวางข้อความแทน')
-    return source.trim()
+    return await extractPdfText(doc)
   } finally { await loading.destroy() }
 }

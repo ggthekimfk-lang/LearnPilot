@@ -2,6 +2,7 @@ import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { PGlite } from '@electric-sql/pglite'
+import { validate } from '../supabase/functions/analyze-content/validation.ts'
 
 const db = new PGlite()
 const userA = '00000000-0000-0000-0000-000000000001'
@@ -15,7 +16,7 @@ before(async () => {
     create schema auth; create table auth.users(id uuid primary key);
     create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
     insert into auth.users values('${userA}'),('${userB}');`)
-  for (const file of ['202609300001_leanpilot.sql', '202609300002_analysis.sql', '202609300003_plan_management.sql', '202609300004_question_review.sql', '202610020005_safety_fixes.sql', '202610020006_transient_retry.sql']) await db.exec(await readFile(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'))
+  for (const file of ['202609300001_leanpilot.sql', '202609300002_analysis.sql', '202609300003_plan_management.sql', '202609300004_question_review.sql', '202610020005_safety_fixes.sql', '202610020006_transient_retry.sql', '202610020007_learning_summary.sql']) await db.exec(await readFile(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'))
   await login(userA)
 })
 after(async () => { await db.close() })
@@ -55,9 +56,14 @@ test('worker claim is leased and output is atomically published', async () => {
   const output = { summary: { overview: 'Transport', references: [reference], points: [{ text: 'TCP reliable', references: [reference] }] },
     concepts: [1, 2, 3].map(i => ({ id: `c${i}`, name: `Concept ${i}`, description: 'Transport', references: [reference] })),
     questions: Array.from({ length: 20 }, (_, i) => ({ concept_id: `c${i % 3 + 1}`, prompt: `Question ${i}`, choices: ['A', 'B', 'C', 'D'], correct: i % 4, explanation: 'Source explains this', reference })) }
-  await rpc('lp_publish_analysis', [content, userA, output, 42, claim.analysis_claim])
+  output.summary.references.push({ section: 1, excerpt: 'Invented evidence' })
+  const verifiedOutput = validate(output, claim.source)
+  await rpc('lp_publish_analysis', [content, userA, verifiedOutput, 42, claim.analysis_claim])
   const snapshot = await rpc('lp_snapshot')
   assert.equal(snapshot.materials[0].status, 'ready')
+  assert.equal(snapshot.materials[0].summary.verification_warnings.length, 1)
+  assert.equal(snapshot.materials[0].summary.references[0].status, 'verified')
+  assert.equal(snapshot.materials[0].summary.references[1].status, 'unverified')
   assert.equal(snapshot.materials[0].concepts[0].id, `${content}:c1`)
   assert.ok(snapshot.evidence.every(e => e.status === 'ยังประเมินไม่เพียงพอ'))
   assert.ok(!JSON.stringify(snapshot).includes('correct":0,"explanation'))
@@ -256,4 +262,90 @@ test('provider 503 refunds one retry and outage recovery is idempotent', async (
   await rpc('lp_fail_analysis', [id, userA, 'Validation failed', recovered.analysis_claim])
   await assert.rejects(rpc('lp_claim_analysis', [id, userA, 'test-model']))
   await rpc('lp_delete_content', [id])
+})
+
+
+test('summary publishes without questions; quiz failures and stale claims preserve lesson', async () => {
+  await login(userA)
+  const courseId = await rpc('lp_create_course', ['Summary first', 'test', null])
+  const id = '10000000-0000-0000-0000-000000000097'
+  await rpc('lp_import', [courseId, 'TCP', 'TCP provides reliable transport. '.repeat(10), id])
+  await assert.rejects(rpc('lp_claim_quiz', [id, userB, 'test']))
+  await assert.rejects(rpc('lp_claim_quiz', [id, userA, 'test']))
+  const claim = await rpc('lp_claim_analysis', [id, userA, 'test'])
+  const output = validate({ summary: { overview: 'TCP ส่งข้อมูลอย่างเชื่อถือได้', references: [], sections: [{ title: 'แนวคิดสำคัญ', items: ['TCP ส่งข้อมูลอย่างเชื่อถือได้'] }], points: [{ text: 'TCP ส่งข้อมูลอย่างเชื่อถือได้', references: [] }] }, concepts: [{ id: 'c1', name: 'TCP', description: 'Reliable transport', references: [] }], questions: [] }, claim.source, id, 'summary')
+  await rpc('lp_publish_summary', [id, userA, output, 1, claim.analysis_claim])
+  const before = await call('select summary value from public.lp_content where id=$1', [id])
+  assert.equal(await call('select count(*)::int value from lp_private.questions where content_id=$1', [id]), 0)
+  assert.equal(await call('select status value from public.lp_content where id=$1', [id]), 'ready')
+  assert.equal(await call('select validation_status value from public.lp_content where id=$1', [id]), 'source_warning')
+  await assert.rejects(rpc('lp_start_quiz', [id]))
+  const quiz = await rpc('lp_claim_quiz', [id, userA, 'test'])
+  await assert.rejects(rpc('lp_claim_quiz', [id, userA, 'test']))
+  await rpc('lp_fail_quiz', [id, userA, 'Gemini unavailable', quiz.analysis_claim])
+  assert.deepEqual(await call('select summary value from public.lp_content where id=$1', [id]), before)
+  assert.equal(await call('select status value from public.lp_content where id=$1', [id]), 'ready')
+  const next = await rpc('lp_claim_quiz', [id, userA, 'test'])
+  const q = { concept_id: 'c1', prompt: 'Which protocol provides reliable transport?', choices: ['TCP','UDP','Neither','Unknown'], correct: 0, explanation: 'TCP provides reliable transport.', reference: { section: 1, excerpt: 'TCP provides reliable transport.' } }
+  await assert.rejects(rpc('lp_publish_quiz', [id, userA, { questions: [q] }, 1, quiz.analysis_claim]))
+  await assert.rejects(rpc('lp_publish_quiz', [id, userA, { questions: [{ ...q, concept_id: 'c99' }] }, 1, next.analysis_claim]))
+  await rpc('lp_fail_quiz', [id, userA, 'stale', quiz.analysis_claim])
+  await rpc('lp_publish_quiz', [id, userA, { questions: [q] }, 1, next.analysis_claim])
+  assert.deepEqual(await call('select summary value from public.lp_content where id=$1', [id]), before)
+  assert.equal((await rpc('lp_claim_quiz', [id, userA, 'test'])).ready, true)
+  assert.ok(await rpc('lp_start_quiz', [id]))
+  for (const signature of ['public.lp_publish_summary(uuid,uuid,jsonb,integer,uuid)', 'public.lp_claim_quiz(uuid,uuid,text)', 'public.lp_publish_quiz(uuid,uuid,jsonb,integer,uuid)', 'public.lp_fail_quiz(uuid,uuid,text,uuid)']) {
+    assert.equal(await call("select has_function_privilege('authenticated',$1,'EXECUTE') value", [signature]), false)
+    assert.equal(await call("select has_function_privilege('service_role',$1,'EXECUTE') value", [signature]), true)
+  }
+  await rpc('lp_delete_content', [id])
+})
+
+
+
+
+test('analysis worker repair replays safely and refunds only the latest reference failure', async () => {
+  await login(userA);
+  const course = await rpc('lp_create_course', ['Repair regression', 'test', null]);
+  const id = '10000000-0000-0000-0000-000000000094';
+  await rpc('lp_import', [course, 'Repair', 'Reliable transport. '.repeat(20), id]);
+  await db.query("update public.lp_content set status='failed',retry_count=3,error='Reference not found in source: overview' where id=$1", [id]);
+  const repair = await readFile(new URL('../supabase/repairs/analysis_worker_alignment.sql', import.meta.url), 'utf8');
+  await db.exec(repair);
+  await db.exec(repair);
+  assert.equal(await call('select retry_count value from public.lp_content where id=$1', [id]), 2);
+  const claim = await rpc('lp_claim_analysis', [id, userA, 'test']);
+  assert.ok(claim.analysis_claim);
+  await rpc('lp_publish_summary', [id, userA, { summary: { overview: 'Transport', points: [{ text: 'Reliable', references: [] }], references: [] }, concepts: [], questions: [] }, 1, claim.analysis_claim]);
+  assert.equal(await call('select status value from public.lp_content where id=$1', [id]), 'ready');
+  await rpc('lp_delete_content', [id]);
+});
+
+test('grounded quiz migration publishes 20 items, preserves metadata and keeps keys private', async () => {
+  await db.exec(await readFile(new URL('../supabase/migrations/202610020008_grounded_quiz.sql', import.meta.url), 'utf8'))
+  await login(userA)
+  const courseId = await rpc('lp_create_course', ['Grounded quiz', 'test', null])
+  const id = '10000000-0000-0000-0000-000000000096'
+  const source = 'Check input before producing output. '.repeat(20)
+  await rpc('lp_import', [courseId, 'Validation', source, id])
+  const claim = await rpc('lp_claim_analysis', [id, userA, 'test'])
+  const lesson = { summary: { overview: 'Validation', references: [], points: [{ text: 'Check inputs', references: [] }] }, concepts: [{ id: 'c1', name: 'Validation', description: 'Check inputs', references: [] }], questions: [] }
+  await rpc('lp_publish_summary', [id, userA, lesson, 1, claim.analysis_claim])
+  const quiz = await rpc('lp_claim_quiz', [id, userA, 'test'])
+  const qs = Array.from({ length: 20 }, (_, i) => ({ concept_id: 'c1', prompt: `Question ${i}`, choices: ['Check', 'Skip', 'After', 'Neither'], correct: i % 4, explanation: 'Check inputs', reference: { section: 1, excerpt: 'Check input before producing output.', status: 'verified' }, difficulty: i < 4 ? 'easy' : i < 12 ? 'medium' : 'hard', questionType: ['concept','scenario','application','reasoning'][i % 4] }))
+  await assert.rejects(rpc('lp_publish_quiz', [id, userA, { questions: qs.slice(0,19) }, 1, quiz.analysis_claim]))
+  await assert.rejects(rpc('lp_publish_quiz', [id, userA, { questions: qs.map(q => ({ ...q, difficulty: 'easy' })) }, 1, quiz.analysis_claim]))
+  await rpc('lp_publish_quiz', [id, userA, { questions: qs }, 1, quiz.analysis_claim])
+  const attemptId = await rpc('lp_start_quiz', [id])
+  const draft = (await rpc('lp_snapshot')).attempts.find(a => a.id === attemptId)
+  assert.equal(draft.questions.length, 20)
+  assert.equal(draft.questions.filter(q => q.difficulty === 'hard').length, 8)
+  assert.equal(new Set(draft.questions.map(q => q.questionType)).size, 4)
+  assert.ok(draft.questions.every(q => !('correct' in q) && !('explanation' in q)))
+  const rows = (await db.query('select id,correct from lp_private.questions where content_id=$1', [id])).rows
+  const result = await rpc('lp_submit_quiz', [attemptId, Object.fromEntries(rows.map(q => [q.id, q.correct]))])
+  assert.equal(result.total, 20)
+  assert.equal(result.score, 20)
+  assert.ok(result.feedback.every(q => q.explanation === 'Check inputs'))
+  await assert.rejects(rpc('lp_start_quiz', [id]), /คำถามใหม่หมดแล้ว/)
 })

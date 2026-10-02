@@ -21,7 +21,11 @@ export async function rpc<T>(name: string, args: Record<string, unknown> = {}): 
   if (!navigator.onLine) throw new Error('ต้องออนไลน์เพื่อทำรายการนี้')
   const { data, error } = await client.rpc(name, args)
   if (error) {
-    if (error.code === 'PGRST202' || error.code === '42P01') throw new Error('Supabase ยังไม่ได้ติดตั้ง schema LeanPilot กรุณาใช้ SQL migration ในโฟลเดอร์ supabase/migrations ตาม README แล้วโหลดหน้าใหม่')
+    if (error.code === 'PGRST202') {
+      const setup = 'กรุณาตรวจ SQL migrations ในโฟลเดอร์ supabase/migrations ตาม README'
+      throw new Error(`Supabase ไม่พบฟังก์ชัน ${name} ใน schema cache ${setup} หากติดตั้งแล้วให้ reload schema และตรวจว่าเชื่อมต่อโปรเจกต์ถูกต้อง`)
+    }
+    if (error.code === '42P01') throw new Error(`Supabase พบตารางที่ยังไม่มีขณะเรียก ${name} กรุณาตรวจ SQL migrations ตาม README`)
     throw new Error(error.message)
   }
   return data as T
@@ -30,9 +34,9 @@ export async function loadSnapshot() {
   await rpc('lp_rebalance')
   return rpc<Snapshot>('lp_snapshot')
 }
-export async function analyze(id: string) {
+export async function analyze(id: string, mode: 'summary' | 'quiz' = 'summary') {
   if (!client || !navigator.onLine) throw new Error('การวิเคราะห์ต้องออนไลน์')
-  const { data, error } = await client.functions.invoke('analyze-content', { body: { content_id: id } })
+  const { data, error } = await client.functions.invoke('analyze-content', { body: { content_id: id, mode } })
   if (error instanceof FunctionsFetchError) {
     throw new Error('เชื่อมต่อ Edge Function ไม่สำเร็จ กรุณาตรวจเครือข่าย การ deploy analyze-content และ APP_ORIGIN ให้ตรงกับ URL ของหน้าเว็บ')
   }

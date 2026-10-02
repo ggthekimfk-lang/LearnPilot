@@ -3,3 +3,4 @@ project_id = "leanpilot"
 [functions.analyze-content]
 # JWT is verified with auth.getUser inside the function (supports publishable keys).
 verify_jwt = false
+
