@@ -95,7 +95,15 @@ export function validate(value: unknown, source: string, documentId?: string, mo
   })
   const prompts = new Set<string>()
   for (const [index, q] of a.questions.entries()) {
-    if (!ids.has(q.concept_id) || !q.prompt || prompts.has(q.prompt.trim().toLowerCase()) || !Array.isArray(q.choices) || q.choices.length !== 4 || new Set(q.choices.map(c => c.trim().toLowerCase())).size !== 4 || q.choices.some(c => typeof c !== 'string' || !c.trim()) || !Number.isInteger(q.correct) || q.correct < 0 || q.correct > 3 || !q.explanation) throw new Error('Invalid or duplicate question')
+    const fail = (reason: string): never => { throw new Error(`คำถามข้อ ${index + 1}: ${reason}`) }
+    if (!q || !ids.has(q.concept_id)) fail('concept_id ต้องตรงกับแนวคิดที่ให้: ' + [...ids].join(', '))
+    if (typeof q.prompt !== 'string' || !q.prompt.trim()) fail('ข้อความคำถามต้องไม่ว่าง')
+    if (prompts.has(q.prompt.trim().toLowerCase())) fail('คำถามซ้ำกับข้อก่อนหน้า กรุณาสร้างคำถามใหม่')
+    if (!Array.isArray(q.choices) || q.choices.length !== 4) fail('ต้องมีตัวเลือกครบ 4 ข้อ')
+    if (q.choices.some(c => typeof c !== 'string' || !c.trim())) fail('ตัวเลือกต้องเป็นข้อความและไม่ว่าง')
+    if (new Set(q.choices.map(c => c.trim().toLowerCase())).size !== 4) fail('ตัวเลือกซ้ำ กรุณาสร้างตัวเลือกที่แตกต่างกัน')
+    if (!Number.isInteger(q.correct) || q.correct < 0 || q.correct > 3) fail('correct ต้องเป็นดัชนีตัวเลือก 0, 1, 2 หรือ 3')
+    if (typeof q.explanation !== 'string' || !q.explanation.trim()) fail('ต้องมีคำอธิบายคำตอบ')
     prompts.add(q.prompt.trim().toLowerCase()); q.reference = refs([q.reference], `คำถาม ${index + 1}`)[0]
   }
   a.summary.verification_warnings = warnings

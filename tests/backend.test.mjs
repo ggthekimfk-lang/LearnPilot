@@ -349,3 +349,22 @@ test('grounded quiz migration publishes 20 items, preserves metadata and keeps k
   assert.ok(result.feedback.every(q => q.explanation === 'Check inputs'))
   await assert.rejects(rpc('lp_start_quiz', [id]), /คำถามใหม่หมดแล้ว/)
 })
+
+test('audit: a low score schedules retests even after the grounded question bank is exhausted', async () => {
+  await login(userA)
+  const courseId = await rpc('lp_create_course', ['Audit retest', 'Understand validation', null])
+  const id = '10000000-0000-0000-0000-000000000095'
+  await rpc('lp_import', [courseId, 'Audit lesson', 'Check input before producing output. '.repeat(20), id])
+  const claim = await rpc('lp_claim_analysis', [id, userA, 'test'])
+  await rpc('lp_publish_summary', [id, userA, { summary: { overview: 'Validation', references: [], points: [{ text: 'Check inputs', references: [] }] }, concepts: [{ id: 'c1', name: 'Validation', description: 'Check inputs', references: [] }], questions: [] }, 1, claim.analysis_claim])
+  const quiz = await rpc('lp_claim_quiz', [id, userA, 'test'])
+  const qs = Array.from({ length: 20 }, (_, i) => ({ concept_id: 'c1', prompt: `Audit question ${i}`, choices: ['Check', 'Skip', 'After', 'Neither'], correct: 0, explanation: 'Check inputs', reference: { section: 1, excerpt: 'Check input before producing output.', status: 'verified' }, difficulty: i < 4 ? 'easy' : i < 12 ? 'medium' : 'hard', questionType: ['concept', 'scenario', 'application', 'reasoning'][i % 4] }))
+  await rpc('lp_publish_quiz', [id, userA, { questions: qs }, 1, quiz.analysis_claim])
+  const attemptId = await rpc('lp_start_quiz', [id])
+  const draft = (await rpc('lp_snapshot')).attempts.find(a => a.id === attemptId)
+  await rpc('lp_submit_quiz', [attemptId, Object.fromEntries(draft.questions.map(q => [q.id, 1]))])
+  const state = await rpc('lp_snapshot')
+  assert.ok(state.plans.find(p => p.course_id === courseId).tasks.some(t => t.kind === 'quiz' && t.status === 'pending'))
+  assert.equal((await rpc('lp_claim_quiz', [id, userA, 'test'])).ready, true)
+  await assert.rejects(rpc('lp_start_quiz', [id]), /คำถามใหม่หมดแล้ว/)
+})

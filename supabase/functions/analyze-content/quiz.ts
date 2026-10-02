@@ -81,6 +81,8 @@ export async function generateQuiz(source: string, id: string, lesson: Pick<Anal
         const batchSchema = { ...quizSchema, properties: { questions: { ...quizSchema.properties.questions,
           items: { ...quizSchema.properties.questions.items, properties: { ...quizSchema.properties.questions.items.properties,
             difficulty: { type: 'string', enum: [difficulty] },
+            concept_id: { type: 'string', enum: concepts.map(c => c.id) },
+            correct: { type: 'integer', enum: [0, 1, 2, 3] },
           } },
         } } }
         const output = await generate(JSON.stringify({ ...input, plan, batch: { difficulty, count },
@@ -97,7 +99,10 @@ export async function generateQuiz(source: string, id: string, lesson: Pick<Anal
         })
         const batch = validate({ ...lesson, concepts, questions: grounded }, source, id)
         if (batch.questions.some(q => q.reference.status !== 'verified')) throw new Error(`ชุด ${difficulty} มีคำถามไม่มีหลักฐานจากต้นฉบับ`)
-        questions.push(...batch.questions)
+        // validate canonicalizes page/section to the excerpt's exact location.
+        // Keep the original server-derived metadata for the final validation:
+        // a 2000-character chunk may contain more than one PDF page.
+        questions.push(...grounded)
       }
       const analysis = validate({ ...lesson, concepts, questions }, source, id)
       checkQuiz(analysis)

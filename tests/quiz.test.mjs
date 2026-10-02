@@ -36,6 +36,10 @@ test('sample source traverses planning, 20-item generation, grounded validation 
   assert.deepEqual(batches.map(c => c.input.batch), [{ difficulty: 'easy', count: 4 }, { difficulty: 'medium', count: 8 }, { difficulty: 'hard', count: 8 }])
   assert.deepEqual(batches.map(c => c.input.existingQuestions.length), [0,4,12])
   for (const c of batches) assert.deepEqual(c.format.properties.questions.items.properties.difficulty.enum, [c.input.batch.difficulty])
+  for (const c of batches) {
+    assert.deepEqual(c.format.properties.questions.items.properties.concept_id.enum, ['c1'])
+    assert.deepEqual(c.format.properties.questions.items.properties.correct.enum, [0, 1, 2, 3])
+  }
   assert.deepEqual([0,1,2,3].map(key => result.questions.filter(q => q.correct === key).length), [5,5,5,5])
   result.questions.forEach((q, i) => {
     assert.equal(q.choices[q.correct], `Check input ${i + 1} before output ${i + 1}`)
@@ -48,6 +52,26 @@ test('insufficient source stops before generation', async () => {
   let calls = 0
   await assert.rejects(generateQuiz('TCP is reliable.', 'doc', lesson, async () => { calls++; return { sufficient: false } }), /ไม่เพียงพอ/)
   assert.equal(calls, 1)
+})
+
+for (const [name, transform, reason] of [
+  ['unknown concept', qs => qs.map(q => ({ ...q, concept_id: 'Validation' })), /concept_id/],
+  ['duplicate options', qs => qs.map(q => ({ ...q, choices: ['A', ' a ', 'B', 'C'] })), /ตัวเลือกซ้ำ/],
+  ['malformed options', qs => qs.map(q => ({ ...q, choices: [null, 'B', 'C', 'D'] })), /ตัวเลือกต้องเป็นข้อความ/],
+  ['blank explanation', qs => qs.map(q => ({ ...q, explanation: ' ' })), /คำอธิบาย/],
+  ['duplicate prompts', qs => qs.map(q => ({ ...q, prompt: 'Same question' })), /คำถามซ้ำ/],
+  ['one-based answer key', qs => qs.map(q => ({ ...q, correct: 4 })), /ดัชนีตัวเลือก/],
+]) test(`reports actionable ${name} feedback and repairs provider output without relaxing validation`, async () => {
+  let invalid = true
+  const p = provider(qs => {
+    if (!invalid) return qs
+    invalid = false
+    return transform(qs)
+  })
+  const result = await generateQuiz(source, 'doc', lesson, p.generate)
+  checkQuiz(result)
+  assert.match(p.calls.find(c => c.input.revision)?.input.revision ?? '', reason)
+  assert.equal(result.questions.length, 20)
 })
 for (const [name, transform] of [
   ['count', qs => qs.slice(0,-1)],
@@ -107,6 +131,25 @@ test('wire schema asks the model for an existing passage ID, never a copied quot
   const reference = quizSchema.properties.questions.items.properties.reference
   assert.deepEqual(reference.required, ['passage_id'])
   assert.deepEqual(Object.keys(reference.properties), ['passage_id'])
+})
+
+test('quiz keeps original passage metadata through final validation when two PDF pages share a chunk', async () => {
+  const pdf = '[PDF หน้า 1]\nIntroduction to validation.\n[PDF หน้า 2]\n' + source
+  const p = provider()
+  const generate = async (input, format, instruction) => {
+    if (!format.properties.questions) return p.generate(input, format, instruction)
+    const parsed = JSON.parse(input)
+    return { questions: questions().filter(q => q.difficulty === parsed.batch.difficulty).map(q => ({
+      ...q, reference: { passage_id: parsed.source.find(passage => passage.text.includes(q.reference.excerpt))?.passage_id ?? parsed.source.find(passage => passage.text.includes('Stage')).passage_id },
+    })) }
+  }
+  const result = await generateQuiz(pdf, 'doc', lesson, generate)
+  checkQuiz(result)
+  for (const q of result.questions) {
+    assert.equal(q.reference.status, 'verified')
+    assert.equal(q.reference.page, 2)
+    assert.equal(pdf.slice(q.reference.start, q.reference.end), q.reference.excerpt)
+  }
 })
 
 
