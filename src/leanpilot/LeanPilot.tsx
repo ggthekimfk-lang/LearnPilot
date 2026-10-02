@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { analyze, client, loadSnapshot, rpc } from './api'
+import { authErrorMessage } from './auth-errors'
 import { clearPrivate, events, queueEvent, readSaved, removeEvent, saveOffline } from './offline'
 import { emptySnapshot } from './types'
 import type { Attempt, Material, Plan, Reference, Snapshot, Task } from './types'
 import './leanpilot.css'
 import './design.css'
 import './stitch.css'
+import './auth.css'
 import Icon from './Icons'
 import Account from './Account'
 
@@ -198,18 +200,49 @@ export default function LeanPilot() {
 type Run = (action: () => Promise<void>) => Promise<void>
 function Auth({ busy, error, notice, run, setNotice }: { busy: boolean; error: string; notice: string; run: Run; setNotice: (s: string) => void }) {
   const [register, setRegister] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const submitting = useRef(false)
   const submit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); const data = new FormData(e.currentTarget)
+    e.preventDefault()
+    if (busy || submitting.current) return
+    submitting.current = true
+    const data = new FormData(e.currentTarget)
     void run(async () => {
       if (!client) throw new Error('ยังไม่ได้ตั้งค่า Supabase กรุณาดู README')
-      const credentials = { email: String(data.get('email')), password: String(data.get('password')) }
-      const result = register ? await client.auth.signUp(credentials) : await client.auth.signInWithPassword(credentials)
-      if (result.error) throw result.error
-      if (register && !result.data.session) setNotice('สมัครสำเร็จ กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ')
-    })
+      const credentials = { email: String(data.get('email')).trim(), password: String(data.get('password')) }
+      const result = register ? await client.auth.signUp({ ...credentials, options: { emailRedirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).href } }) : await client.auth.signInWithPassword(credentials)
+      if (result.error) throw new Error(authErrorMessage(result.error))
+      if (register && !result.data.session) {
+        setRegister(false)
+        setNotice('ส่งคำขอสมัครแล้ว กรุณาตรวจกล่องจดหมายและสแปมเพื่อยืนยันอีเมล จากนั้นเข้าสู่ระบบด้วยบัญชีเดิม ไม่ต้องสมัครซ้ำ')
+      }
+    }).finally(() => { submitting.current = false })
   }
-  return <main className="lp-app lp-auth"><section><a className="lp-brand" href="#"><span><Icon name="compass" /></span> LeanPilot</a><span className="lp-eyebrow">YOUR LEARNING COMPASS</span><h1>รู้ว่าควรเรียนอะไรต่อ<br />และรู้ว่าเพราะอะไร</h1><p>เปลี่ยนเนื้อหาของคุณให้เป็นสรุป แบบทดสอบ และแผนเรียนที่ปรับตามหลักฐาน</p><div className="lp-auth-cycle"><span>01<br /><strong>เพิ่มเนื้อหา</strong></span><span>02<br /><strong>ทดสอบ</strong></span><span>03<br /><strong>ปรับแผน</strong></span></div></section><form className="lp-card" onSubmit={submit}><h2>{register ? 'สร้างบัญชี' : 'ยินดีต้อนรับกลับ'}</h2><p>พื้นที่เรียนรู้ส่วนตัวของคุณ</p>{!client && <div className="lp-alert">โปรเจกต์ยังไม่ได้ตั้งค่า backend โปรดตั้งค่า VITE_SUPABASE_URL และ VITE_SUPABASE_PUBLISHABLE_KEY แล้วใช้ migration ตาม README</div>}{error && <p role="alert" className="lp-error">{error}</p>}{notice && <p role="status">{notice}</p>}<label>อีเมล<input type="email" name="email" autoComplete="email" required /></label><label>รหัสผ่าน<input type="password" name="password" minLength={8} autoComplete={register ? 'new-password' : 'current-password'} required /></label><button disabled={busy || !client}>{busy ? 'กำลังดำเนินการ…' : register ? 'สร้างบัญชี' : 'เข้าสู่ระบบ →'}</button><button type="button" className="lp-link" onClick={() => setRegister(!register)}>{register ? 'มีบัญชีแล้ว เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิก'}</button></form></main>
+    return <main className="lp-app lp-auth lp-auth-simple">
+    <form className="lp-card lp-auth-card" onSubmit={submit} aria-busy={busy}>
+      <a className="lp-brand" href="#"><span><Icon name="compass" /></span> LearnPilot</a>
+      <div className="lp-auth-tabs" role="group" aria-label="บัญชีผู้ใช้">
+        <button type="button" aria-pressed={!register} disabled={busy} onClick={() => { setRegister(false); setShowPassword(false) }}>เข้าสู่ระบบ</button>
+        <button type="button" aria-pressed={register} disabled={busy} onClick={() => { setRegister(true); setShowPassword(false) }}>สมัครสมาชิก</button>
+      </div>
+      <h1>{register ? 'เริ่มเรียนกับ LearnPilot' : 'เข้าสู่ระบบ'}</h1>
+      <p>{register ? 'สร้างบัญชีด้วยอีเมลและรหัสผ่าน' : 'ใช้อีเมลและรหัสผ่านที่สมัครไว้'}</p>
+      {!client && <div className="lp-alert" role="alert">ยังไม่พร้อมเชื่อมต่อระบบ กรุณาติดต่อผู้ดูแล</div>}
+      {error && <p role="alert" className="lp-error">{error}</p>}
+      {notice && <p role="status" className="lp-auth-notice">{notice}</p>}
+      <label htmlFor="lp-auth-email">อีเมล</label>
+      <input id="lp-auth-email" type="email" name="email" autoComplete="username" placeholder="name@example.com" autoCapitalize="none" spellCheck={false} required disabled={busy} />
+      <label htmlFor="lp-auth-password">รหัสผ่าน</label>
+      <div className="lp-password-field">
+        <input id="lp-auth-password" type={showPassword ? 'text' : 'password'} name="password" minLength={register ? 8 : undefined} autoComplete={register ? 'new-password' : 'current-password'} placeholder={register ? 'อย่างน้อย 8 ตัวอักษร' : 'รหัสผ่านของคุณ'} required disabled={busy} />
+        <button type="button" aria-controls="lp-auth-password" aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? 'ซ่อน' : 'แสดง'}</button>
+      </div>
+      <button type="submit" className="lp-auth-submit" disabled={busy || !client}>{busy ? 'กำลังดำเนินการ…' : register ? 'สร้างบัญชี' : 'เข้าสู่ระบบ'}</button>
+      <p className="lp-auth-help">{register ? 'หากมีบัญชีแล้ว เลือกเข้าสู่ระบบด้านบน ไม่ต้องสมัครซ้ำ' : 'หากเพิ่งสมัคร ให้ยืนยันอีเมลจากข้อความที่ได้รับก่อนเข้าสู่ระบบ'}</p>
+    </form>
+  </main>
 }
+
 function Empty({ title, text }: { title: string; text: string }) { return <div className="lp-card lp-empty"><span className="lp-empty-icon"><Icon name="library" /></span><h3>{title}</h3><p>{text}</p></div> }
 
 function Library({ snapshot, busy, online, run, refresh, open }: { snapshot: Snapshot; busy: boolean; online: boolean; run: Run; refresh: () => Promise<void>; open: (id: string) => void }) {
@@ -289,6 +322,10 @@ function CapacityNotice({ snapshot }: { snapshot: Snapshot }) {
   const over = Object.entries(totals).filter(([, minutes]) => minutes > snapshot.preferences.minutes);
   return over.length ? <div className="lp-alert error" role="status">กิจกรรมที่ล็อกหรือเริ่มแล้วเกินเวลาว่างใหม่ใน {over.map(([date, minutes]) => `${date} (${minutes} นาที)`).join(', ')} กรุณาปลดล็อก/เลื่อนงาน หรือเพิ่มเวลาว่าง</div> : null;
 }
+
+
+
+
 
 
 

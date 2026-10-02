@@ -1,0 +1,18 @@
+.lp-app.lp-auth-simple { display: flex; align-items: center; justify-content: center; min-height: 100svh; padding: 28px 20px; }
+.lp-auth-simple > .lp-auth-card { width: 100%; max-width: 440px; padding: 32px; margin: 0; }
+.lp-auth-simple .lp-brand { margin: 0 0 28px; font-size: 25px; }
+.lp-auth-simple h1 { font-size: 27px; line-height: 1.4; margin: 26px 0 8px; }
+.lp-auth-simple .lp-auth-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: #eff2eb; }
+.lp-auth-simple .lp-auth-tabs button { flex: 1; background: transparent; color: var(--muted); border: 0; }
+.lp-auth-simple .lp-auth-tabs button[aria-pressed=true] { background: white; color: var(--green); box-shadow: 0 2px 6px #143d3210; font-weight: 600; }
+.lp-auth-simple form > label { display: block; margin: 20px 0 8px; font-size: 14px; }
+.lp-auth-simple form > input, .lp-auth-simple .lp-password-field input { margin: 0; }
+.lp-auth-simple .lp-password-field { position: relative; }
+.lp-auth-simple .lp-password-field input { padding-right: 76px; }
+.lp-auth-simple .lp-password-field button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); padding: 6px 12px; min-height: 36px; background: transparent; color: var(--green); font-size: 13px; }
+.lp-auth-simple .lp-password-field button:hover { background: #eff2eb; }
+.lp-auth-simple .lp-password-field button:not(:disabled):active { transform: translateY(-50%); }
+.lp-auth-simple .lp-auth-submit { width: 100%; margin-top: 24px; }
+.lp-auth-simple .lp-auth-help { margin: 18px 0 0; font-size: 12px; line-height: 1.7; color: var(--muted); }
+.lp-auth-simple .lp-auth-notice { padding: 12px; border-radius: 10px; background: #edf4e2; font-size: 13px; }
+@media (max-width: 480px) { .lp-auth-simple > .lp-auth-card { padding: 24px; } }

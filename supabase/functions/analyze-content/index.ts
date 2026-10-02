@@ -2,11 +2,13 @@ import { createClient } from 'npm:@supabase/supabase-js@2.117.2'
 import { generateQuiz } from './quiz.ts'
 import { generate } from '../_shared/gemini.ts'
 import { generateLearning } from './learning.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const cors = { 'Access-Control-Allow-Origin': Deno.env.get('APP_ORIGIN') || 'http://localhost:5173', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Vary': 'Origin' }
-const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 Deno.serve(async request => {
-  if (request.method === 'OPTIONS') return new Response(null, { headers: cors })
+  const cors = corsHeaders(request, Deno.env.get('APP_ORIGIN') || 'http://localhost:5173')
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
+  if (request.headers.has('Origin') && !cors['Access-Control-Allow-Origin']) return json({ error: 'Frontend origin is not allowed; check APP_ORIGIN' }, 403)
+if (request.method === 'OPTIONS') return new Response(null, { headers: cors })
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
   if (!Deno.env.get('GEMINI_API_KEY') || !Deno.env.get('GEMINI_MODEL')) return json({ error: 'ยังไม่ได้ตั้งค่า Gemini ฝั่ง server' }, 503)
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -44,4 +46,5 @@ const { error: publishError } = await db.rpc('lp_publish_quiz', { p_content: con
   EdgeRuntime.waitUntil(work())
   return json({ status: 'analyzing' }, 202)
 })
+
 
