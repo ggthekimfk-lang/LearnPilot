@@ -27,7 +27,7 @@ npm run typecheck:worker
 **Migration ยังไม่ได้ใช้กับ Supabase ที่เชื่อมอยู่** หากพบว่าไม่พบ `lp_snapshot`/`lp_rebalance` ให้ทำขั้นตอนนี้ก่อนสร้างวิชา
 
 1. ใช้โปรเจกต์ staging ที่จัดการได้ เปิด Email/Password Auth และตั้ง redirect URL ของ frontend
-2. รัน SQL ใน `supabase/migrations` ตามลำดับ `001` → `002` → `003` → `004` → `005` → `006` → `007` **ครั้งเดียว** ผ่าน SQL Editor หรือใช้ CLI workflow ด้านล่าง ตารางใหม่ใช้ prefix `lp_*` และไม่แก้ตาราง prototype เดิม
+2. รัน SQL ใน `supabase/migrations` ตามลำดับ `001` → `002` → `003` → `004` → `005` → `006` → `007` → `008` → `009` **ครั้งเดียว** ผ่าน SQL Editor หรือใช้ CLI workflow ด้านล่าง ตารางใหม่ใช้ prefix `lp_*` และไม่แก้ตาราง prototype เดิม
 3. สร้าง API key ที่ [Google AI Studio](https://aistudio.google.com/apikey) ตั้ง server secrets และ deploy `analyze-content`:
 
 ```sh
@@ -103,3 +103,15 @@ still consume the three-attempt budget. Recovery does not delete content or
 reset earlier failures; replaying migration 006 does not refund twice.
 
 
+
+## Quiz recovery fixes (migration 009)
+
+Apply migrations through 008, then apply `supabase/migrations/202610030009_quiz_availability.sql` and deploy the updated frontend. Migration 009 prevents exhausted banks from scheduling retests, repairs affected active plans while retaining historical versions, and prevents rollback to unavailable quizzes. It does not generate questions or call Gemini; the worker needs no changes.
+
+Unsaved quiz selections are stored per user and attempt in sessionStorage in the current browser tab, without questions or answer keys. Reopening or refreshing the same tab restores pending selections; retry saving when online. Confirmed saves/submissions and logout remove these selections. Closing the tab may lose unsaved selections, so the app warns before unloading; storage restrictions can also prevent recovery.
+
+## ทบทวนหัวข้อจากผลทดสอบ (ไม่เรียก AI เพิ่ม)
+
+หลังส่ง quiz หรือเปิดผลย้อนหลัง จะมีการ์ดหัวข้อที่ตอบผิดพร้อมจำนวนข้อผิด/ข้อทั้งหมดในชุดนี้ กด “ทบทวนเนื้อหา” เพื่ออ่านคำอธิบาย concept แหล่งอ้างอิง และข้อผิดพร้อมเฉลยเดิม กด “อ่านสรุปบทเรียนเต็ม” เพื่อกลับบทเรียน ฟีเจอร์นี้ไม่มี provider calls, ไม่มีการสร้างคำถามใหม่ และไม่เพิ่มคะแนนความเข้าใจจากการเปิดอ่าน ไม่ต้องเพิ่ม environment variables หรือ migration สำหรับส่วนทบทวนนี้
+
+ทดสอบด้วยผลที่มีข้อผิดหลายหัวข้อ ผลที่ตอบถูกทั้งหมด และผลที่ถูกถอนคำถามจนไม่มีข้อประเมิน ระบบต้องไม่สร้างหัวข้อจุดอ่อนที่ไม่มีหลักฐาน

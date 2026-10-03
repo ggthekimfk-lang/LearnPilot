@@ -1,3 +1,4 @@
+import { allowQuizNavigation } from './quiz-draft'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
@@ -153,7 +154,7 @@ export default function LeanPilot() {
   }, [page, selected, attemptId])
 
   useEffect(() => {
-    const shortcut = (event: KeyboardEvent) => { if (user && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setPage('search'); setSelected(null); setAttemptId(null); document.querySelector<HTMLInputElement>('[role=search] input')?.focus() } }
+    const shortcut = (event: KeyboardEvent) => { if (user && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); if (!allowQuizNavigation()) return; setPage('search'); setSelected(null); setAttemptId(null); document.querySelector<HTMLInputElement>('[role=search] input')?.focus() } }
     window.addEventListener('keydown', shortcut); return () => window.removeEventListener('keydown', shortcut)
   }, [user])
 
@@ -165,6 +166,7 @@ export default function LeanPilot() {
   const due = tasks.filter(t => t.date && t.date <= today && ['pending', 'in_progress'].includes(t.status))
 
   const startQuiz = (m: Material) => run(async () => {
+    if (m.quiz_available === false) throw new Error('ใช้คำถามครบแล้ว — ยังอ่านสรุปและทบทวนเฉลยเดิมได้ กรุณาเพิ่มเนื้อหาใหม่สำหรับแบบทดสอบชุดใหม่')
     await analyze(m.id, 'quiz')
     const id = await rpc<string>('lp_start_quiz', { p_content: m.id }); await refresh(); setAttemptId(id); setSelected(m.id)
   })
@@ -199,7 +201,7 @@ export default function LeanPilot() {
     return neighbor ? () => { setSelected(neighbor.id); setAttemptId(null); window.scrollTo({ top: 0, behavior: 'instant' }) } : undefined
   }
   const activePage = selected ? 'library' : page
-  const navigate = (next: Page) => { setPage(next); setSelected(null); setAttemptId(null); window.scrollTo({ top: 0, behavior: 'instant' }) }
+  const navigate = (next: Page) => { if (!allowQuizNavigation()) return; setPage(next); setSelected(null); setAttemptId(null); window.scrollTo({ top: 0, behavior: 'instant' }) }
   return <div className={`lp-app ${collapsed ? 'lp-nav-collapsed' : ''} ${attempt && !attempt.result ? 'lp-focus-mode' : ''}`}>
     <Navigation page={activePage} onNavigate={navigate} email={session.user.email || ''} completed={completed} total={tasks.length} collapsed={collapsed} onCollapse={() => setCollapsed(value => !value)} />
     <div className="lp-workspace"><header className="lp-topbar"><div className="lp-header-inner">
@@ -210,7 +212,7 @@ export default function LeanPilot() {
         {notice && <div className="lp-alert" role="status">{notice}<button aria-label="ปิดข้อความ" onClick={() => setNotice('')}>×</button></div>}
         {!online && <div className="lp-alert">{downloaded ? 'กำลังอ่านข้อมูลที่บันทึกไว้ คะแนนและแผนจะอัปเดตเมื่อออนไลน์' : 'ยังไม่มีข้อมูลที่ดาวน์โหลดไว้ กรุณาออนไลน์แล้วบันทึกในตั้งค่า'}</div>}
         {update && <div className="lp-alert">มีเวอร์ชันใหม่พร้อมใช้งาน <button disabled={!!attempt && !attempt.result} onClick={() => { const reload = () => window.location.reload(); navigator.serviceWorker.addEventListener('controllerchange', reload, { once: true }); update.postMessage({ type: 'SKIP_WAITING' }) }}>อัปเดตแอป</button>{attempt && !attempt.result && <small>ส่ง quiz หรือออกจาก quiz ก่อนอัปเดต</small>}</div>}
-        <Suspense fallback={<Skeleton />}>{loading ? <Skeleton /> : <>{page === 'plan' && !material && <CapacityNotice snapshot={snapshot} />}{attempt && material ? <Quiz onPlan={() => navigate('plan')} onProgress={() => navigate('progress')} key={attempt.id} attempt={attempt} material={material} busy={busy} online={online} run={run} refresh={refresh} onBack={() => setAttemptId(null)} report={(entity, description) => run(async () => { await rpc('lp_report', { p_content: material.id, p_entity: entity, p_description: description }); setNotice('ส่งรายงานแล้ว รอผู้ดูแลตรวจสอบ') })} /> : material ? <LearningContent key={material.id} userId={user!} position={snapshot.materials.filter(m => m.course_id === material.course_id).sort((a, b) => a.created_at.localeCompare(b.created_at)).findIndex(m => m.id === material.id) + 1} total={snapshot.materials.filter(m => m.course_id === material.course_id).length} previous={lessonNeighbor(material, -1)} next={lessonNeighbor(material, 1)} draft={snapshot.attempts.find(a => a.content_id === material.id && !a.result) ? () => setAttemptId(snapshot.attempts.find(a => a.content_id === material.id && !a.result)!.id) : undefined} material={material} busy={busy} online={online} onBack={() => { setLibraryCourse(material.course_id); navigate('library') }} startQuiz={() => void startQuiz(material)} retry={() => void run(async () => { await analyze(material.id); await refresh() })} report={description => void run(async () => { await rpc('lp_report', { p_content: material.id, p_entity: 'summary', p_description: description }); setNotice('ส่งรายงานแล้ว') })} /> : <>
+        <Suspense fallback={<Skeleton />}>{loading ? <Skeleton /> : <>{page === 'plan' && !material && <CapacityNotice snapshot={snapshot} />}{attempt && material ? <Quiz userId={user!} onPlan={() => navigate('plan')} onProgress={() => navigate('progress')} key={attempt.id} attempt={attempt} material={material} busy={busy} online={online} run={run} refresh={refresh} onBack={() => setAttemptId(null)} report={(entity, description) => run(async () => { await rpc('lp_report', { p_content: material.id, p_entity: entity, p_description: description }); setNotice('ส่งรายงานแล้ว รอผู้ดูแลตรวจสอบ') })} /> : material ? <LearningContent key={material.id} userId={user!} position={snapshot.materials.filter(m => m.course_id === material.course_id).sort((a, b) => a.created_at.localeCompare(b.created_at)).findIndex(m => m.id === material.id) + 1} total={snapshot.materials.filter(m => m.course_id === material.course_id).length} previous={lessonNeighbor(material, -1)} next={lessonNeighbor(material, 1)} draft={snapshot.attempts.find(a => a.content_id === material.id && !a.result) ? () => setAttemptId(snapshot.attempts.find(a => a.content_id === material.id && !a.result)!.id) : undefined} material={material} busy={busy} online={online} onBack={() => { setLibraryCourse(material.course_id); navigate('library') }} startQuiz={() => void startQuiz(material)} retry={() => void run(async () => { await analyze(material.id); await refresh() })} report={description => void run(async () => { await rpc('lp_report', { p_content: material.id, p_entity: 'summary', p_description: description }); setNotice('ส่งรายงานแล้ว') })} /> : <>
           {page === 'today' && <Dashboard snapshot={snapshot} due={due} completed={completed} tasks={tasks} navigate={navigate} open={id => { setSelected(id); setAttemptId(null) }} taskCard={taskCard} name={String(session.user.user_metadata.display_name || session.user.email?.split('@')[0] || '')} />}
           {page === 'search' && <SearchPage userId={user!} snapshot={snapshot} open={id => { setSelected(id); setAttemptId(null) }} openAttempt={(content, attempt) => { setSelected(content); setAttemptId(attempt) }} openCourse={id => { setLibraryCourse(id); navigate('library') }} navigate={navigate} />}
           {page === 'tutor' && <TutorPage snapshot={snapshot} initialMaterial={tutorMaterial} onChoose={setTutorMaterial} startQuiz={m => void startQuiz(m)} busy={busy} online={online} navigate={navigate} />}

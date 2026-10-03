@@ -21,4 +21,5 @@ export function removeEvent(user: string, id: string) {
 }
 export function clearPrivate() {
   Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k))
+  Object.keys(sessionStorage).filter(k => k.startsWith(prefix)).forEach(k => sessionStorage.removeItem(k))
 }
