@@ -4,11 +4,14 @@ import tailwindcss from '@tailwindcss/vite'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createHash } from 'node:crypto'
+import { devPort, previewPort } from './supabase/functions/_shared/app-origins.ts'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   return {
   server: {
+    port: devPort,
+    strictPort: true,
     proxy: env.VITE_SUPABASE_URL ? {
       '/__supabase/functions/v1/': {
         target: env.VITE_SUPABASE_URL,
@@ -23,6 +26,8 @@ export default defineConfig(({ mode }) => {
       },
     } : undefined,
   },
+  // Vite preview inherits server.proxy, including the authenticated function proxy.
+  preview: { port: previewPort, strictPort: true },
   plugins: [react(), tailwindcss(), {
     name: 'leanpilot-shell',
     apply: 'build',

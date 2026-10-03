@@ -24,6 +24,8 @@ npm run typecheck:worker
 
 ## ตั้งค่า backend
 
+การเข้าสู่ระบบด้วย Google: ปุ่มเชื่อมกับ Supabase Auth แล้ว แต่ต้องเปิด Google provider และตั้งค่า OAuth/redirect ตาม [คู่มือตั้งค่า](docs/GOOGLE-LOGIN.md) ก่อนใช้งานจริง
+
 **Migration ยังไม่ได้ใช้กับ Supabase ที่เชื่อมอยู่** หากพบว่าไม่พบ `lp_snapshot`/`lp_rebalance` ให้ทำขั้นตอนนี้ก่อนสร้างวิชา
 
 1. ใช้โปรเจกต์ staging ที่จัดการได้ เปิด Email/Password Auth และตั้ง redirect URL ของ frontend
@@ -40,9 +42,9 @@ supabase functions deploy analyze-content
 
 ใช้ `db push` เมื่อยังไม่ได้ใช้ SQL Editor หรือบันทึก migration history ให้ตรงก่อน push อย่ารันทั้งสองวิธีซ้ำ เลือก `GEMINI_MODEL` ที่บัญชีเข้าถึงได้และรองรับ Gemini structured output ไม่ตั้งค่าโมเดลหรือค่าใช้จ่ายแทนผู้ดูแล
 
-Local development ใช้ `APP_ORIGIN=http://localhost:5173` หรือ origin ที่เปิดจริง (รวม port) Production ต้องเป็น HTTPS `verify_jwt=false` ใน function config เพราะ function ตรวจ bearer token ด้วย `auth.getUser` เองทุก request Worker ใช้ service role ภายใน environment ของ Supabase เท่านั้น
+รายการ origin กลางอยู่ใน `supabase/functions/_shared/app-origins.ts`: production คือ `https://learn-pilot-blush.vercel.app`, dev คือ `http://localhost:5173`, preview คือ `http://localhost:4173` (รวม 127.0.0.1 และ port 5174 เดิม) หากเปลี่ยนโดเมนให้แก้ไฟล์นี้ แล้วใช้ `npm run deploy:backend` เพื่อ sync `APP_ORIGIN`, deploy worker และตรวจ CORS จริงในคำสั่งเดียว Production ต้องเป็น HTTPS `verify_jwt=false` ใน function config เพราะ function ตรวจ bearer token ด้วย `auth.getUser` เองทุก request Worker ใช้ service role ภายใน environment ของ Supabase เท่านั้น
 
-`npm run dev` ส่งคำขอ Edge Function ผ่าน Vite proxy บน origin เดียวกับหน้าเว็บ จึงรองรับ port ที่ Vite เลือก เช่น 5176 โดยยังส่ง token ของผู้ใช้ตามปกติ หากแก้ config แล้ว server ไม่ restart ให้เริ่ม `npm run dev` ใหม่ Production และ `npm run preview` เรียก Supabase โดยตรง จึงต้องตั้ง `APP_ORIGIN` ให้ตรงกับ origin ที่ใช้งานจริง
+`npm run dev` และ `npm run preview` ส่งคำขอ Edge Function ผ่าน Vite proxy บน origin เดียวกับหน้าเว็บ โดยยังส่ง token ของผู้ใช้ตามปกติ ทั้งสองโหมดใช้ port คงที่และหยุดพร้อมข้อผิดพลาดเมื่อ port ถูกใช้งาน เพื่อไม่ให้ URL เปลี่ยนโดยไม่รู้ตัว หากแก้ config ให้ restart server Production เรียก Supabase โดยตรง Backend เทียบ Origin กับรายการ `APP_ORIGIN` ทีละค่า (protocol/hostname/port ต้องตรง; `/` ท้าย URL ปรับรูปแบบได้ แต่ path/query/credentials ไม่อนุญาต) ไม่มี wildcard ใช้ `npm run check:origins` ตรวจ preflight ทั้ง origin ที่อนุญาตและที่ต้องปฏิเสธ โดยไม่เรียก Gemini
 
 Structured output อ้างอิง [Gemini official documentation](https://ai.google.dev/gemini-api/docs/generate-content/structured-output)
 

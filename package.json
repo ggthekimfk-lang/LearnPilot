@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node --test tests/*.test.mjs",
-    "typecheck:worker": "tsc -p supabase/functions/tsconfig.json"
+    "typecheck:worker": "tsc -p supabase/functions/tsconfig.json",
+    "check:origins": "node scripts/check-origins.mjs",
+    "deploy:backend": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-backend.ps1"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

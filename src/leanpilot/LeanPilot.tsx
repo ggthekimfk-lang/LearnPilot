@@ -245,6 +245,21 @@ function Auth({ busy, error, notice, run, setNotice, clearFeedback }: { busy: bo
       setNotice('ส่งคำขออีเมลยืนยันแล้ว หากบัญชียังรอยืนยัน กรุณาตรวจกล่องจดหมายและสแปม แล้วเปิดลิงก์ยืนยันก่อนเข้าสู่ระบบ')
     }).finally(() => { submitting.current = false })
   }
+  const signInGoogle = () => {
+    if (busy || submitting.current) return
+    submitting.current = true
+    void run(async () => {
+      if (!client) throw new Error('ยังไม่ได้ตั้งค่า Supabase กรุณาดู README')
+      const { error } = await client.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).href,
+          queryParams: { prompt: 'select_account' },
+        },
+      })
+      if (error) throw new Error(authErrorMessage(error))
+    }).finally(() => { submitting.current = false })
+  }
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (busy || submitting.current) return
@@ -282,8 +297,15 @@ function Auth({ busy, error, notice, run, setNotice, clearFeedback }: { busy: bo
         <button type="button" aria-controls="lp-auth-password" aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? 'ซ่อน' : 'แสดง'}</button>
       </div>
       <button type="submit" className="lp-auth-submit" disabled={busy || !client}>{busy ? 'กำลังดำเนินการ…' : register ? 'สร้างบัญชี' : 'เข้าสู่ระบบ'}</button>
-      <p className="lp-auth-help">{register ? 'หากมีบัญชีแล้ว เลือกเข้าสู่ระบบด้านบน ไม่ต้องสมัครซ้ำ' : 'หากเพิ่งสมัคร ให้ยืนยันอีเมลจากข้อความที่ได้รับก่อนเข้าสู่ระบบ'}</p>
-      {!register && <button type="button" className="lp-link" disabled={busy || !client || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())} onClick={resendConfirmation}>ส่งอีเมลยืนยันอีกครั้ง</button>}
+            <div className="lp-auth-social">
+        <div className="lp-auth-divider"><span>หรือเข้าสู่ระบบด้วย</span></div>
+<button type="button" className="lp-google-login" disabled={busy || !client} onClick={signInGoogle}>
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.61 4.61 0 0 1-2 3.03v2.52h3.24c1.9-1.75 2.98-4.33 2.98-7.38Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.39l-3.24-2.52c-.9.6-2.04.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.06v2.6A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.41 13.93a6 6 0 0 1 0-3.86v-2.6H3.06a10 10 0 0 0 0 9.06l3.35-2.6Z"/><path fill="#EA4335" d="M12 5.95c1.47 0 2.79.51 3.82 1.52l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.94 5.47l3.35 2.6C7.2 7.71 9.4 5.95 12 5.95Z"/></svg>
+        เข้าสู่ระบบด้วย Google
+      </button>
+      </div>
+<p className="lp-auth-help">{register ? 'หากมีบัญชีแล้ว เลือกเข้าสู่ระบบด้านบน ไม่ต้องสมัครซ้ำ' : 'หากเพิ่งสมัคร ให้ยืนยันอีเมลจากข้อความที่ได้รับก่อนเข้าสู่ระบบ'}</p>
+      {!register && /ยืนยันอีเมล/.test(error) && <button type="button" className="lp-link" disabled={busy || !client || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())} onClick={resendConfirmation}>ส่งอีเมลยืนยันอีกครั้ง</button>}
     </form>
   </main>
 }

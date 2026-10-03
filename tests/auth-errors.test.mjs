@@ -1,6 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { authErrorMessage } from '../src/leanpilot/auth-errors.ts'
+
+test('disabled Google provider points to existing password login and provider setup', () => {
+  assert.match(authErrorMessage({ message: 'Unsupported provider: provider is not enabled' }), /Google.*อีเมลและรหัสผ่าน/)
+  assert.match(authErrorMessage({ code: 'provider_disabled', message: 'Disabled' }), /Supabase/)
+})
 test('other-email signup delivery restrictions and invalid credentials have distinct guidance', () => {
   assert.match(authErrorMessage({ code: 'email_address_not_authorized', message: 'Email address not authorized' }), /Custom SMTP/)
   assert.match(authErrorMessage({ message: 'Email address "test@example.com" cannot be used as it is not authorized' }), /Custom SMTP/)

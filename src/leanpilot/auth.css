@@ -16,3 +16,9 @@
 .lp-auth-simple .lp-auth-help { margin: 18px 0 0; font-size: 12px; line-height: 1.7; color: var(--muted); }
 .lp-auth-simple .lp-auth-notice { padding: 12px; border-radius: 10px; background: #edf4e2; font-size: 13px; }
 @media (max-width: 480px) { .lp-auth-simple > .lp-auth-card { padding: 24px; } }
+
+.lp-auth-simple .lp-auth-card .lp-google-login { display:flex; align-items:center; justify-content:center; width:100%; margin:0; padding:12px 18px; background:white; color:#263c35; border:1px solid #d9e5df; border-radius:12px; gap:10px; min-height:50px; line-height:1.5; font-size:14px; font-weight:500; box-shadow:0 2px 4px #173d3205; }
+.lp-auth-simple .lp-auth-card .lp-google-login:hover { background:#f6faf8; border-color:#a8c9b9; box-shadow:0 4px 12px #173d320c; }
+.lp-google-login svg { display:block; width:20px; height:20px; flex-shrink:0; }
+.lp-auth-divider { display:flex; align-items:center; gap:12px; margin:20px 0 16px; font-size:12px; color:var(--muted); }
+.lp-auth-divider::before,.lp-auth-divider::after { content:''; flex:1; height:1px; background:#e3ebe6; }

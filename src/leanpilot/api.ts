@@ -1,16 +1,17 @@
 import { createClient, FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js'
 import type { Snapshot } from './types'
+import { functionUrl } from './function-url'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 export const client = url && key ? createClient(url, key, {
   global: {
     fetch: (input, init) => {
-      // Keep SDK auth headers; only Edge Function requests use the Vite dev proxy.
+      // Keep SDK auth headers; local dev and preview use the same-origin proxy.
       const target = new URL(input instanceof Request ? input.url : String(input))
-      if (import.meta.env.DEV && target.origin === new URL(url).origin && target.pathname.startsWith('/functions/v1/')) {
-        const local = `/__supabase${target.pathname}${target.search}`
-        return fetch(input instanceof Request ? new Request(new URL(local, window.location.origin), input) : local, init)
+      const routed = functionUrl(target, url, window.location.origin)
+      if (routed !== target.href) {
+        return fetch(input instanceof Request ? new Request(routed, input) : routed, init)
       }
       return fetch(input, init)
     },
@@ -38,7 +39,7 @@ export async function analyze(id: string, mode: 'summary' | 'quiz' = 'summary') 
   if (!client || !navigator.onLine) throw new Error('การวิเคราะห์ต้องออนไลน์')
   const { data, error } = await client.functions.invoke('analyze-content', { body: { content_id: id, mode } })
   if (error instanceof FunctionsFetchError) {
-    throw new Error('เชื่อมต่อ Edge Function ไม่สำเร็จ กรุณาตรวจเครือข่าย การ deploy analyze-content และ APP_ORIGIN ให้ตรงกับ URL ของหน้าเว็บ')
+    throw new Error('เชื่อมต่อบริการวิเคราะห์ไม่สำเร็จ กรุณาตรวจการเชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง')
   }
   if (error instanceof FunctionsHttpError) {
     let message = `วิเคราะห์ไม่สำเร็จ (HTTP ${error.context.status})`
