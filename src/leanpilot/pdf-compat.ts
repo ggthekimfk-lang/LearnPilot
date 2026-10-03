@@ -13,3 +13,26 @@ if (typeof factory.withResolvers !== 'function') {
     },
   })
 }
+
+// PDF.js getTextContent uses `for await` on a ReadableStream. Older WebKit
+// exposes getReader() but not the stream's async iterator, even in legacy builds.
+if (typeof ReadableStream !== 'undefined' && typeof ReadableStream.prototype[Symbol.asyncIterator] !== 'function') {
+  const iterate = async function* <T>(this: ReadableStream<T>, options: { preventCancel?: boolean } = {}) {
+    const reader = this.getReader()
+    let complete = false
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) { complete = true; return }
+        yield value
+      }
+    } finally {
+      try { if (!complete && !options.preventCancel) await reader.cancel() }
+      finally { reader.releaseLock() }
+    }
+  }
+  Object.defineProperty(ReadableStream.prototype, Symbol.asyncIterator, { configurable: true, writable: true, value: iterate })
+  if (typeof ReadableStream.prototype.values !== 'function') {
+    Object.defineProperty(ReadableStream.prototype, 'values', { configurable: true, writable: true, value: iterate })
+  }
+}
