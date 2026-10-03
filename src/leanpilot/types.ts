@@ -3,7 +3,7 @@ export type Concept = { id: string; name: string; description: string; reference
 export type Material = { quiz_available?: boolean; id: string; course_id: string; title: string; source: string; status: 'queued' | 'extracting' | 'analyzing' | 'ready' | 'failed'; claimed_at?: string; error: string | null; summary: { sections?: { title: string; items: string[] }[]; verification_warnings?: { location: string; reason: string }[]; overview: string; references: Reference[]; points: { text: string; references: Reference[] }[] } | null; concepts: Concept[]; created_at: string }
 export type Course = { id: string; title: string; goal: string; target_date: string | null }
 export type Question = { id: string; concept_id: string; prompt: string; choices: string[]; difficulty?: 'standard' | 'easy' | 'medium' | 'hard' | null; questionType?: string | null }
-export type Attempt = { id: string; content_id: string; questions: Question[]; answers: Record<string, number>; result: Result | null; created_at: string }
+export type Attempt = { id: string; content_id: string; questions: Question[]; answers: Record<string, number>; result: Result | null; submitted_at?: string | null; created_at: string }
 export type Result = { score: number; total: number; withdrawn_count?: number; notice?: string; feedback: { question_id: string; prompt: string; selected: number; choices: string[]; correct: number; explanation: string; reference: Reference; concept_id: string }[] }
 export type Evidence = { id: string; name: string; correct: number; sample: number; status: string }
 export type Task = { id: string; content_id: string; concept_id: string; title: string; date: string | null; minutes: number; status: 'pending' | 'in_progress' | 'completed' | 'skipped'; locked: boolean; reason: string; kind: 'review' | 'quiz' }
@@ -11,5 +11,3 @@ export type Plan = { id: string; course_id: string; version: number; trigger: st
 export type Preferences = { minutes: number; timezone: string; days: number[]; language: string }
 export type Snapshot = { courses: Course[]; materials: Material[]; attempts: Attempt[]; plans: Plan[]; evidence: Evidence[]; preferences: Preferences }
 export const emptySnapshot: Snapshot = { courses: [], materials: [], attempts: [], plans: [], evidence: [], preferences: { minutes: 30, timezone: 'Asia/Bangkok', days: [0, 1, 2, 3, 4, 5, 6], language: 'th' } }
-
-

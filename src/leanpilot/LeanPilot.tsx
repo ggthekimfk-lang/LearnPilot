@@ -11,6 +11,7 @@ import './leanpilot.css'
 
 import './auth.css'
 import Icon from './Icons'
+import BrandMark from './BrandMark'
 import Navigation from './Navigation'
 import { navigationLabels } from './navigation-items'
 
@@ -21,6 +22,7 @@ import { Skeleton } from './ui'
 import type { NavigationPage } from './navigation-items'
 import './navigation.css'
 import './workspace.css'
+import './brand.css'
 
 const Library = lazy(() => import('./Library'))
 const StudyPlanner = lazy(() => import('./StudyPlanner'))
@@ -260,9 +262,9 @@ function Auth({ busy, error, notice, run, setNotice, clearFeedback }: { busy: bo
     }).finally(() => { submitting.current = false })
   }
     return <main className="lp-app lp-auth lp-auth-simple">
-    <section className="lp-auth-story"><div className="lp-brand"><span><Icon name="compass" /></span>LearnPilot</div><span className="lp-eyebrow">CALM AI LEARNING WORKSPACE</span><h2>เรียนอย่างมีทิศทาง<br /><em>เติบโตในจังหวะของคุณ</em></h2><p>จากเอกสารที่มี สู่ความเข้าใจที่ชัดขึ้น ให้ AI ช่วยสรุป ทดสอบ และวางแผนให้พอดีกับชีวิต</p><div className="lp-auth-steps"><div><span>01</span><div><strong>เพิ่มสิ่งที่คุณอยากเรียน</strong><small>เอกสาร PDF ข้อความ และโน้ตของคุณ</small></div></div><div><span>02</span><div><strong>เปลี่ยนเนื้อหาเป็นความเข้าใจ</strong><small>สรุป AI และแบบทดสอบจากบทเรียน</small></div></div><div><span>03</span><div><strong>เดินต่อด้วยแผนที่เหมาะกับคุณ</strong><small>ทบทวนจากหลักฐาน ตามเวลาที่มี</small></div></div></div></section>
+    <section className="lp-auth-story"><div className="lp-brand"><span><BrandMark /></span>LearnPilot</div><div className="lp-mascot-scene" aria-hidden="true"><div className="lp-mascot-orbit" /><div className="lp-mascot-medallion"><img src="/brand-mark.png" alt="" width="180" height="180" /></div><i className="lp-mascot-spark spark-one">✦</i><i className="lp-mascot-spark spark-two">✧</i><div className="lp-mascot-caption">YOUR LEARNING COMPANION</div></div><span className="lp-eyebrow">CALM AI LEARNING WORKSPACE</span><h2>เรียนอย่างมีทิศทาง<br /><em>เติบโตในจังหวะของคุณ</em></h2><p>จากเอกสารที่มี สู่ความเข้าใจที่ชัดขึ้น ให้ AI ช่วยสรุป ทดสอบ และวางแผนให้พอดีกับชีวิต</p><div className="lp-auth-steps"><div><span>01</span><div><strong>เพิ่มสิ่งที่คุณอยากเรียน</strong><small>เอกสาร PDF ข้อความ และโน้ตของคุณ</small></div></div><div><span>02</span><div><strong>เปลี่ยนเนื้อหาเป็นความเข้าใจ</strong><small>สรุป AI และแบบทดสอบจากบทเรียน</small></div></div><div><span>03</span><div><strong>เดินต่อด้วยแผนที่เหมาะกับคุณ</strong><small>ทบทวนจากหลักฐาน ตามเวลาที่มี</small></div></div></div></section>
     <form className="lp-card lp-auth-card" onSubmit={submit} aria-busy={busy}>
-      <a className="lp-brand" href="#"><span><Icon name="compass" /></span> LearnPilot</a>
+      <a className="lp-brand" href="#"><span><BrandMark /></span> LearnPilot</a>
       <div className="lp-auth-tabs" role="group" aria-label="บัญชีผู้ใช้">
         <button type="button" aria-pressed={!register} disabled={busy} onClick={() => { setRegister(false); setShowPassword(false); clearFeedback() }}>เข้าสู่ระบบ</button>
         <button type="button" aria-pressed={register} disabled={busy} onClick={() => { setRegister(true); setShowPassword(false); clearFeedback() }}>สมัครสมาชิก</button>

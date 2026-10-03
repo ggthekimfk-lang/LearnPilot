@@ -88,7 +88,7 @@ function AddMaterial({ onNavigate, onSubmit }: AddMaterialProps) {
       <div className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-3 mb-4">
           <img
-            src="/mascot.jpg"
+            src="/brand-mark.png"
             alt="Mascot"
             className="w-12 h-12 rounded-full"
           />

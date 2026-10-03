@@ -62,7 +62,7 @@ function LoginPage({ onNavigate }: LoginPageProps) {
         {/* Mascot */}
         <div className="animate-scaleIn mb-3">
           <img
-            src="/mascot.jpg"
+            src="/brand-mark.png"
             alt="LearnPilot"
             className="w-20 h-20 rounded-full mx-auto border-3 border-white/30 shadow-lg"
           />

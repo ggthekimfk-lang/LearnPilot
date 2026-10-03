@@ -10,7 +10,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
       {/* Profile Header */}
       <div className="bg-white px-5 pt-6 pb-6 text-center">
         <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-3 border-primary/20 mb-3">
-          <img src="/mascot.jpg" alt="Profile" className="w-full h-full object-cover" />
+          <img src="/brand-mark.png" alt="Profile" className="w-full h-full object-cover" />
         </div>
         <h2 className="text-lg font-bold text-gray-800">Learner</h2>
         <p className="text-sm text-gray-500">University Student</p>

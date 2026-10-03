@@ -182,7 +182,7 @@ function AISummary({
           <div className="px-5 mt-4 pb-8">
             <div className="flex items-start gap-3 mb-5">
               <img
-                src="/mascot.jpg"
+                src="/brand-mark.png"
                 alt="AI"
                 className="w-9 h-9 rounded-full flex-shrink-0"
               />

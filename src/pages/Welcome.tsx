@@ -20,7 +20,7 @@ function Welcome({ onNavigate }: WelcomeProps) {
       <div className="flex-1 flex flex-col items-center justify-center px-8 pt-12">
         <div className="animate-float mb-6">
           <img
-            src="/mascot.jpg"
+            src="/brand-mark.png"
             alt="LearnPilot Mascot"
             className="w-48 h-48 object-contain drop-shadow-lg rounded-full"
           />
