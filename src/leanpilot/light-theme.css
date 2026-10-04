@@ -1,0 +1,158 @@
+/* Reference theme: white surfaces, a mint canvas, and clear emerald actions.
+   Loaded after the layout styles so every active screen shares this palette. */
+:root { color-scheme: light; }
+body { background: #f5faf8; }
+.lp-app {
+  --ink: #124c3b;
+  --muted: #60736c;
+  --green: #087f5b;
+  --action: #087f5b;
+  --canvas: #f5faf8;
+  --surface: #fff;
+  --sage: #edf8f2;
+  --line: #dcebe4;
+  --highlight: #00bc83;
+  --info: #2167a8;
+  --info-surface: #edf6ff;
+  --warning: #875900;
+  --warning-surface: #fff6dc;
+  --error: #ac3737;
+  --error-surface: #fff1f0;
+  --radius: 24px;
+  --shadow: 0 3px 12px #124c3b08, 0 1px 3px #124c3b05;
+  background: var(--canvas);
+  font-size: 16px;
+}
+.lp-app h1, .lp-app h2, .lp-app h3 { color: var(--ink); font-weight: 700; }
+.lp-app h1 { font-size: clamp(30px, 3vw, 40px); line-height: 1.5; }
+.lp-app p, .lp-app small, .lp-app .lp-muted { color: var(--muted); }
+.lp-app .lp-eyebrow, .lp-app .lp-nav-caption { color: var(--muted); }
+.lp-app button { border-radius: 16px; font-weight: 600; }
+.lp-app button:hover { background: #066b4d; }
+.lp-app .lp-secondary { background: var(--sage); color: var(--green); border: 1px solid transparent; }
+.lp-app .lp-secondary:hover { background: #def3e8; border-color: #b9ddcc; }
+.lp-app .lp-link { color: var(--green); background: transparent; }
+.lp-app .lp-link:hover { background: transparent; color: #065b42; }
+.lp-app .lp-error { color: var(--error); }
+.lp-app .lp-destructive { background: var(--error); color: white; }
+.lp-app .lp-destructive:hover { background: #8e2b2b; }
+.lp-app :focus-visible { outline: 3px solid #00a875; outline-offset: 4px; }
+.lp-app input:not([type=radio]):not([type=checkbox]), .lp-app textarea, .lp-app select {
+  background: #fff; border-color: var(--line); border-radius: 14px; font-size: 16px;
+}
+.lp-app input::placeholder, .lp-app textarea::placeholder { color: #6c8077; }
+.lp-app input:focus, .lp-app textarea:focus, .lp-app select:focus {
+  border-color: var(--green); box-shadow: 0 0 0 3px #087f5b12;
+}
+.lp-app .lp-card, .lp-app .lp-tutor-panel { background: var(--surface); border-color: var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.lp-app .lp-topbar { background: #fff; border-color: var(--line); }
+.lp-app .lp-location strong { font-size: 15px; font-weight: 600; }
+.lp-app .lp-header-search { background: #f2f9f5; border-color: var(--line); color: var(--muted); border-radius: 999px; }
+.lp-app .lp-header-search:hover { background: #e6f5ed; }
+.lp-app .lp-avatar { background: var(--green); color: white; border: 0; box-shadow: none; width: 44px; height: 44px; }
+.lp-app .lp-avatar:hover { background: #066b4d; }
+.lp-app .lp-connection { color: var(--green); background: var(--sage); border: 1px solid #c7e6d8; }
+.lp-app .lp-connection.offline { color: var(--warning); background: var(--warning-surface); border-color: #efdfa8; }
+.lp-app .lp-navigation { background: white; border-color: var(--line); }
+.lp-app .lp-nav-item { background: transparent; color: var(--muted); }
+.lp-app .lp-nav-item:hover, .lp-app .lp-nav-user:hover { background: var(--sage); color: var(--green); }
+.lp-app .lp-nav-item.active { background: #e4f6ed; color: var(--green); border-color: #cdebdc; }
+.lp-app .lp-nav-dot { background: var(--highlight); }
+.lp-app .lp-nav-goal { background: var(--sage); border-color: var(--line); }
+.lp-app .lp-nav-goal button { background: transparent; color: var(--green); }
+.lp-app .lp-nav-user { background: transparent; color: var(--ink); }
+.lp-app .lp-user-monogram { background: var(--sage); color: var(--green); }
+.lp-app .lp-collapse { background: transparent; color: var(--muted); }
+.lp-app .lp-collapse:hover { background: var(--sage); }
+.lp-app .lp-welcome-panel, .lp-app .lp-hero {
+  background: linear-gradient(120deg, #e5f8ee, #f4fcf8); border-color: #cce9da;
+}
+.lp-app .lp-welcome-panel .lp-tag, .lp-app .lp-hero .lp-tag { background: white; color: var(--green); }
+.lp-app .lp-welcome-panel h2 { font-weight: 700; }
+.lp-app .lp-welcome-art > .lp-icon, .lp-app .lp-orbit > span { color: var(--green); }
+.lp-app .lp-art-ring, .lp-app .lp-art-ring:after { border-color: #8bd6b5; }
+.lp-app .lp-art-leaf { background: #73d6aa; }
+.lp-app .lp-empty-icon, .lp-app .lp-ai-avatar, .lp-app .lp-stat-icon:not(.info):not(.amber):not(.red), .lp-app .lp-lesson-glyph {
+  background: var(--sage); color: var(--green);
+}
+.lp-app .lp-tag { background: var(--sage); color: var(--green); }
+.lp-app .lp-tag.info { background: var(--info-surface); color: var(--info); }
+.lp-app .lp-tag.warning { background: var(--warning-surface); color: var(--warning); }
+.lp-app .lp-tag.danger { background: var(--error-surface); color: var(--error); }
+.lp-app .lp-empty { background: #f8fdfa; border: 2px dashed #c4e5d5; box-shadow: none; }
+.lp-app .lp-alert, .lp-app .lp-auth-notice { background: var(--sage); color: var(--ink); border-color: #c7e6d8; }
+.lp-app .lp-alert.error { background: var(--error-surface); color: var(--error); border-color: #f0cdca; }
+.lp-app .lp-simple-courses .lp-course-card { border-top: 7px solid var(--highlight); }
+.lp-app .lp-simple-courses .lp-course-card:nth-child(n) .lp-empty-icon { background: var(--sage); color: var(--green); }
+.lp-app .lp-course-body { padding: 28px; }
+.lp-app .lp-course-body h3 { font-size: 24px; }
+.lp-app .lp-course-label { justify-content: space-between; }
+.lp-app .lp-course-label .lp-empty-icon { width: 52px; height: 52px; border-radius: 18px; }
+.lp-app .lp-course-body > button { border-top: 1px solid var(--line); margin-top: 22px; min-height: 50px; }
+.lp-app .lp-course-cover, .lp-app .lp-course-cover.tone-1, .lp-app .lp-course-cover.tone-2 { background: var(--sage); color: var(--green); }
+.lp-app .lp-course-create { min-height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.lp-app .lp-course-create .lp-empty-icon { margin-bottom: 8px; }
+.lp-app .lp-course-create p { margin: 0; }
+.lp-app .lp-course-create button { background: transparent; color: var(--ink); font-size: 18px; }
+.lp-app .lp-course-create button:hover { background: #e4f6ed; }
+.lp-app .lp-course-tabs button.active, .lp-app .lp-course-tabs button:hover,
+.lp-app .lp-ai-actions button.active, .lp-app .lp-ai-actions button:hover { background: #def3e8; color: var(--green); }
+.lp-app .lp-file-zone { background: #f8fdfa; border-color: #b6d9c7; }
+.lp-app input::file-selector-button { background: var(--sage); color: var(--green); }
+.lp-app .lp-key-points, .lp-app .lp-tutor-context, .lp-app .lp-ai-open,
+.lp-app .lp-plan-summary, .lp-app .lp-planner-overview, .lp-app .lp-result { background: var(--sage); color: var(--ink); border-color: var(--line); }
+.lp-app .lp-key-points h3 { color: var(--green); }
+.lp-app .lp-reading-overview, .lp-app .lp-reading-content li { color: var(--muted); }
+.lp-app .lp-tutor-response, .lp-app .lp-reference blockquote { background: #f8fcfa; border-color: var(--line); }
+.lp-app .lp-ai-actions button { background: var(--sage); color: var(--green); }
+.lp-app .lp-filter-pills, .lp-app .lp-auth-tabs { background: #eaf5ef; }
+.lp-app .lp-filter-pills button.active { color: var(--green); }
+.lp-app .lp-search-result:hover, .lp-app .lp-lesson-row:hover, .lp-app .lp-lesson-row.active { background: var(--sage); }
+.lp-app .lp-task { border-color: var(--line); border-left-color: var(--highlight); }
+.lp-app .lp-timeline-dot.current { background: var(--highlight); outline-color: var(--highlight); }
+.lp-app .lp-journey-number { background: var(--sage); color: var(--green); }
+.lp-app .lp-choice:hover, .lp-app .lp-choice.selected { background: var(--sage); border-color: var(--green); }
+.lp-app progress, .lp-app progress::-webkit-progress-bar { background: #e2f0e8; }
+.lp-app progress::-webkit-progress-value { background: var(--highlight); }
+.lp-app progress::-moz-progress-bar { background: var(--highlight); }
+.lp-app .lp-profile-hero { background: linear-gradient(120deg, #edf8f2, #fff); }
+.lp-app .lp-profile-stats strong { color: var(--green); }
+.lp-app .lp-skeleton { background-image: linear-gradient(90deg, #e7f3ec 25%, #f5faf8 50%, #e7f3ec 75%); }
+.lp-app .lp-results-page .lp-summary-title { background: var(--sage); border-bottom: 1px solid var(--line); }
+.lp-app .lp-results-page .lp-summary-title h2 { color: var(--ink); }
+.lp-app .lp-results-page .lp-summary-title p { color: var(--muted); }
+.lp-app .lp-summary-emblem { background: white; color: var(--green); border-color: var(--line); }
+.lp-app .lp-topic-meter span { background: var(--highlight); }
+.lp-app.lp-auth-simple { background: var(--canvas); }
+.lp-app.lp-auth-simple > .lp-auth-card { background: white; border: 1px solid var(--line); box-shadow: 0 12px 40px #124c3b0c; }
+.lp-app .lp-auth-steps > span { background: var(--sage); border-color: var(--line); }
+.lp-app .lp-auth-steps strong { color: var(--green); }
+.lp-app .lp-auth-tabs button { background: transparent; color: var(--muted); }
+.lp-app .lp-auth-tabs button[aria-pressed=true] { background: white; color: var(--green); }
+.lp-app .lp-password-field button { background: transparent; color: var(--green); }
+.lp-app .lp-password-field button:hover { background: var(--sage); }
+@media (max-width: 760px) {
+  .lp-app .lp-main { padding: 28px 20px calc(110px + env(safe-area-inset-bottom)); }
+  .lp-app .lp-heading { gap: 22px; margin-bottom: 32px; }
+  .lp-app .lp-heading > button { min-height: 50px; padding: 12px 22px; font-size: 15px; border-radius: 18px; }
+  .lp-app .lp-card { border-radius: 24px; }
+  .lp-app .lp-course-body { padding: 28px; }
+  .lp-app .lp-location strong { font-size: 14px; }
+  .lp-app .lp-menu-trigger { background: transparent; color: var(--ink); }
+  .lp-app .lp-menu-trigger:hover { background: var(--sage); }
+  .lp-app .lp-header-search { background: var(--sage); border: 1px solid var(--line); width: 38px; min-height: 38px; }
+  .lp-app .lp-avatar { width: 40px; height: 40px; min-height: 40px; font-size: 15px; }
+  .lp-app .lp-mobile-navigation {
+    bottom: 0; left: 0; right: 0; border-radius: 0; background: #fff;
+    border: 0; border-top: 1px solid var(--line); box-shadow: 0 -3px 14px #124c3b05;
+    padding: 10px 4px max(12px, env(safe-area-inset-bottom));
+  }
+  .lp-app .lp-mobile-navigation button { color: #66766e; font-size: 10px; gap: 5px; }
+  .lp-app .lp-mobile-navigation button.active { color: var(--green); }
+  .lp-app .lp-mobile-navigation button.active > span { position: relative; background: var(--sage); }
+  .lp-app .lp-mobile-navigation button.active > span::before {
+    content: ''; position: absolute; top: -6px; width: 6px; height: 6px; background: var(--green); border-radius: 50%;
+  }
+  .lp-app .lp-mobile-navigation button:hover { background: var(--sage); }
+  .lp-app .lp-mobile-navigation .lp-icon { width: 24px; height: 24px; }
+}

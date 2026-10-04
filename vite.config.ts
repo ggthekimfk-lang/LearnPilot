@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createHash } from 'node:crypto'
 import { devPort, previewPort } from './supabase/functions/_shared/app-origins.ts'
@@ -9,6 +9,21 @@ import { devPort, previewPort } from './supabase/functions/_shared/app-origins.t
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   return {
+  // Keep the app and its PDF worker parseable on older iPhones and Androids.
+  build: { target: ['chrome92', 'edge92', 'firefox90', 'safari15.4'] },
+  worker: {
+    format: 'es',
+    plugins: () => [{
+      name: 'pdf-worker-fallback-export',
+      renderChunk(code, chunk) {
+        // Vite strips worker entry exports. PDF.js dynamically imports this
+        // same URL for its fallback, so expose the handler after bundling.
+        if (chunk.facadeModuleId?.replaceAll('\\', '/').endsWith('/pdf.worker.ts')) {
+          return `${code}\nconst pdfFallbackHandler = globalThis.pdfjsWorker.WorkerMessageHandler;\nexport { pdfFallbackHandler as WorkerMessageHandler };\n`
+        }
+      },
+    }],
+  },
   server: {
     port: devPort,
     strictPort: true,
@@ -29,6 +44,31 @@ export default defineConfig(({ mode }) => {
   // Vite preview inherits server.proxy, including the authenticated function proxy.
   preview: { port: previewPort, strictPort: true },
   plugins: [react(), tailwindcss(), {
+    name: 'pdf-support-assets',
+    configureServer(server) {
+      const assets = new Map<string, string>()
+      for (const folder of ['cmaps', 'standard_fonts']) {
+        const dir = resolve('node_modules/pdfjs-dist', folder)
+        for (const name of readdirSync(dir)) {
+          if (/\.(bcmap|pfb|ttf)$/.test(name)) assets.set(`/pdfjs/${folder}/${name}`, resolve(dir, name))
+        }
+      }
+      server.middlewares.use((req, res, next) => {
+        const path = assets.get((req.url || '').split('?')[0])
+        if (!path) return next()
+        res.setHeader('Content-Type', 'application/octet-stream')
+        res.end(readFileSync(path))
+      })
+    },
+    generateBundle() {
+      for (const folder of ['cmaps', 'standard_fonts']) {
+        const dir = resolve('node_modules/pdfjs-dist', folder)
+        for (const name of readdirSync(dir)) {
+          if (/\.(bcmap|pfb|ttf)$/.test(name) || name.startsWith('LICENSE')) this.emitFile({ type: 'asset', fileName: `pdfjs/${folder}/${name}`, source: readFileSync(resolve(dir, name)) })
+        }
+      }
+    },
+  }, {
     name: 'leanpilot-shell',
     apply: 'build',
     writeBundle(options, bundle) {

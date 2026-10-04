@@ -44,7 +44,7 @@ supabase functions deploy analyze-content
 
 รายการ origin กลางอยู่ใน `supabase/functions/_shared/app-origins.ts`: production คือ `https://learn-pilot-blush.vercel.app`, dev คือ `http://localhost:5173`, preview คือ `http://localhost:4173` (รวม 127.0.0.1 และ port 5174 เดิม) หากเปลี่ยนโดเมนให้แก้ไฟล์นี้ แล้วใช้ `npm run deploy:backend` เพื่อ sync `APP_ORIGIN`, deploy worker และตรวจ CORS จริงในคำสั่งเดียว Production ต้องเป็น HTTPS `verify_jwt=false` ใน function config เพราะ function ตรวจ bearer token ด้วย `auth.getUser` เองทุก request Worker ใช้ service role ภายใน environment ของ Supabase เท่านั้น
 
-`npm run dev` และ `npm run preview` ส่งคำขอ Edge Function ผ่าน Vite proxy บน origin เดียวกับหน้าเว็บ โดยยังส่ง token ของผู้ใช้ตามปกติ ทั้งสองโหมดใช้ port คงที่และหยุดพร้อมข้อผิดพลาดเมื่อ port ถูกใช้งาน เพื่อไม่ให้ URL เปลี่ยนโดยไม่รู้ตัว หากแก้ config ให้ restart server Production เรียก Supabase โดยตรง Backend เทียบ Origin กับรายการ `APP_ORIGIN` ทีละค่า (protocol/hostname/port ต้องตรง; `/` ท้าย URL ปรับรูปแบบได้ แต่ path/query/credentials ไม่อนุญาต) ไม่มี wildcard ใช้ `npm run check:origins` ตรวจ preflight ทั้ง origin ที่อนุญาตและที่ต้องปฏิเสธ โดยไม่เรียก Gemini
+`npm run dev` และ `npm run preview` ส่งคำขอ Edge Function ผ่าน Vite proxy บน origin เดียวกับหน้าเว็บ โดยยังส่ง token ของผู้ใช้ตามปกติ ทั้งสองโหมดใช้ port คงที่และหยุดพร้อมข้อผิดพลาดเมื่อ port ถูกใช้งาน เพื่อไม่ให้ URL เปลี่ยนโดยไม่รู้ตัว หากแก้ config ให้ restart server Production เรียก Supabase โดยตรง Backend เทียบ Origin กับรายการ `APP_ORIGIN` ทีละค่า (protocol/hostname/port ต้องตรง; `/` ท้าย URL ปรับรูปแบบได้ แต่ path/query/credentials ไม่อนุญาต) ไม่มี wildcard ใช้ `npm run check:origins` ตรวจทั้ง preflight และ POST ที่ไม่ส่ง token: origin ที่อนุญาตต้องได้ 401 พร้อม CORS header ส่วน origin ที่ไม่ได้อนุญาตต้องได้ 403 โดยไม่เรียก Gemini หรือเปลี่ยนข้อมูล
 
 Structured output อ้างอิง [Gemini official documentation](https://ai.google.dev/gemini-api/docs/generate-content/structured-output)
 
@@ -66,6 +66,8 @@ Structured output อ้างอิง [Gemini official documentation](https://
 `npm test` ใช้ PGlite (PostgreSQL ใน WASM) สร้างฐานข้อมูลแยกและ mock เฉพาะ Supabase Auth identity ไม่อ่านหรือเปลี่ยนข้อมูลจริง มี tests รวม PDF.js parser และ provider mock สำหรับ ownership/RLS/grants, import/draft/submit idempotency, key isolation, evidence, capacity/multiple courses, preserved history, missed tasks, offline conflicts, withdrawal/deletion และ output validation
 
 Build, lint และ worker typecheck ต้องผ่านด้วย Tests นี้ยังไม่แทน Supabase/AI live, hosted concurrency หรืออุปกรณ์จริง
+
+การอ่าน PDF บน PC/iPhone/Android: ดู [การรองรับและวิธีตรวจ](docs/PDF-COMPATIBILITY.md) รวมสคริปต์ตรวจ production PDF worker ผ่านเบราว์เซอร์และรายการทดสอบอุปกรณ์จริง
 
 ## ข้อจำกัดก่อน pilot
 

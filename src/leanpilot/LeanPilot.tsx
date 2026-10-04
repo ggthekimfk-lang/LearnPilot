@@ -23,6 +23,7 @@ import type { NavigationPage } from './navigation-items'
 import './navigation.css'
 import './workspace.css'
 import './brand.css'
+import './light-theme.css'
 
 const Library = lazy(() => import('./Library'))
 const StudyPlanner = lazy(() => import('./StudyPlanner'))

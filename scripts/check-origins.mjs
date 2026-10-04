@@ -19,7 +19,21 @@ export async function checkOrigins(endpoint, origins = appOrigins) {
     } else if (response.status !== 403 || allowed !== null) {
       throw new Error(`Untrusted origin was not rejected: ${origin} (HTTP ${response.status}, allowed=${allowed})`)
     }
-    console.log(`PASS ${origin} (HTTP ${response.status})`)
+    // A successful preflight alone does not prove the actual error response has
+    // CORS headers. No token is supplied: this must stop before any AI/data work.
+    const post = await fetch(endpoint, {
+      method: 'POST',
+      headers: { Origin: origin, 'Content-Type': 'application/json' },
+      body: '{}',
+      signal: AbortSignal.timeout(15000),
+    })
+    const postAllowed = post.headers.get('access-control-allow-origin')
+    const expectedStatus = origins.includes(origin) ? 401 : 403
+    const expectedOrigin = origins.includes(origin) ? origin : null
+    if (post.status !== expectedStatus || postAllowed !== expectedOrigin) {
+      throw new Error(`POST origin/auth check failed: ${origin} (HTTP ${post.status}, allowed=${postAllowed})`)
+    }
+    console.log(`PASS ${origin} (OPTIONS ${response.status}, POST ${post.status})`)
   }
 }
 
